@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/home/ilya/Документы/root-6.28.06/build/include",
+                "/home/ilya/Документы/clas12root/Clas12Banks",
+                "/home/ilya/Документы/clas12root/hipo4",
+                "/home/ilya/Документы/clas12root/Clas12Root",
+                "/usr/include/c++/11"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
+}
