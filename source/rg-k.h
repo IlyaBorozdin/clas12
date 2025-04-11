@@ -13,8 +13,10 @@
 #include "dataAnalysis.h"
 #include "constants.h"
 
+using namespace std;
+
 std::pair<double, double> rotatePoint(double x, double y, int sector);
-TGraph* getGraph(function<double(double)> func, double xmin, double xmax, int points);
+TGraph* getGraph(std::function<double(double)> func, double xmin, double xmax, int points);
 
 template<typename... Args>
 class Cut {
