@@ -23,31 +23,31 @@ struct FitParameters {
 
 class MM_Root_Analysis {
 public:
-    MM_Root_Analysis(int WBins) : numberW(WBins) {
-        switch (numberW)
+    MM_Root_Analysis(int WBins) : NUMBER_W(WBins) {
+        switch (NUMBER_W)
         {
         case 18:
-            missingMassesFile = "missingMasses_50.root";
+            MM_FILE = "missingMasses_50.root";
             figureNum = 1;
             break;
         case 36:
-            missingMassesFile = "missingMasses_25.root";
+            MM_FILE = "missingMasses_25.root";
             figureNum = 4;
             break;        
         default:
             break;
         }
         
-        graphNum = numberW / figureNum;
-        missingMasses.resize(numberQQ, vector<TH1F*>(numberW, nullptr));
-        fitFuncs.resize(numberQQ, vector<TF1*>(numberW, nullptr));
-        fullFititFuncs.resize(numberQQ, vector<TF1*>(numberW, nullptr));
-        subFunc.resize(numberQQ, vector<TF1*>(numberW, nullptr));
-        // elementQ.resize(numberQQ, nullptr);
-        elementQ.resize(numberQQ * figureNum, nullptr);
-        yieldAndW.resize(numberQQ, nullptr);
+        graphNum = NUMBER_W / figureNum;
+        missingMasses.resize(NUMBER_Q2, vector<TH1F*>(NUMBER_W, nullptr));
+        fitFuncs.resize(NUMBER_Q2, vector<TF1*>(NUMBER_W, nullptr));
+        fullFititFuncs.resize(NUMBER_Q2, vector<TF1*>(NUMBER_W, nullptr));
+        subFunc.resize(NUMBER_Q2, vector<TF1*>(NUMBER_W, nullptr));
+        // elementQ.resize(NUMBER_Q2, nullptr);
+        elementQ.resize(NUMBER_Q2 * figureNum, nullptr);
+        yieldAndW.resize(NUMBER_Q2, nullptr);
 
-        for (int i = 0; i < numberQQ; i++) {
+        for (int i = 0; i < NUMBER_Q2; i++) {
             //std::string nameCanvasQ = "canvas_mm" + std::to_string(i + 1);
             // elementQ[i] = new TCanvas(nameCanvasQ.c_str(), "Histograms", 7200, 2700);
             for (int j = 0; j < figureNum; j++) {
@@ -60,8 +60,8 @@ public:
     }
 
     ~MM_Root_Analysis() {
-        for (int i = 0; i < numberQQ; i++) {
-            for (int j = 0; j < numberW; j++) {
+        for (int i = 0; i < NUMBER_Q2; i++) {
+            for (int j = 0; j < NUMBER_W; j++) {
                 if (fitFuncs[i][j]) delete fitFuncs[i][j];
                 if (fullFititFuncs[i][j]) delete fullFititFuncs[i][j];
                 if (subFunc[i][j]) delete subFunc[i][j];
@@ -83,13 +83,13 @@ public:
         }
         
 
-        TFile inputFile(missingMassesFile.c_str(), "READ");
+        TFile inputFile(MM_FILE.c_str(), "READ");
         if (inputFile.IsZombie()) {
-            throw std::runtime_error("Error: Cannot open file " + std::string(missingMassesFile));
+            throw std::runtime_error("Error: Cannot open file " + std::string(MM_FILE));
         }
 
-        for (int i = i_start; i < numberQQ; i++) {
-            for (int j = j_start; j < numberW; j++) {
+        for (int i = i_start; i < NUMBER_Q2; i++) {
+            for (int j = j_start; j < NUMBER_W; j++) {
                 std::string nameFunc = "FitFunc_" + std::to_string(i + 1) + "-" + std::to_string(j + 1);
                 std::string histName = "CELL " + std::to_string(i + 1) + "-" + std::to_string(j + 1);
                 missingMasses[i][j] = dynamic_cast<TH1F*>(inputFile.Get(histName.c_str()));
@@ -233,19 +233,19 @@ public:
 
         std::vector<FitParameters> fitParams = readFittingParameters();
 
-        TFile inputFile(missingMassesFile.c_str(), "READ");
+        TFile inputFile(MM_FILE.c_str(), "READ");
         if (inputFile.IsZombie()) {
-            throw std::runtime_error("Error: Cannot open file " + std::string(missingMassesFile));
+            throw std::runtime_error("Error: Cannot open file " + std::string(MM_FILE));
         }
 
-        for (int i = 0; i < numberQQ; i++) {
-            double yPoints[numberW];
-            double eyPoints[numberW];
+        for (int i = 0; i < NUMBER_Q2; i++) {
+            double yPoints[NUMBER_W];
+            double eyPoints[NUMBER_W];
 
             elementQ[i]->Divide(6, 3);
 
-            for (int j = 0; j < numberW; j++) {
-                FitParameters fitParam = fitParams[i * numberW + j];
+            for (int j = 0; j < NUMBER_W; j++) {
+                FitParameters fitParam = fitParams[i * NUMBER_W + j];
                 elementQ[i]->cd(j + 1);
 
                 std::string nameFunc = "FitFunc_" + std::to_string(i + 1) + "-" + std::to_string(j + 1);
@@ -282,19 +282,19 @@ public:
             elementQ[i]->SaveAs(fig_MM_elements_name.c_str());
 
             std::string nameHist = "YIELD " + std::to_string(i + 1);
-            std::string title = "Q^{2} = " + to_string_with_precision(QQedge[2 * i], 1) + "-" + to_string_with_precision(QQedge[2 * i + 1], 1) + " GeV^{2}; W, GeV; Yield";
-            TH1D* hist = new TH1D(nameHist.c_str(), title.c_str(), numberW, WMin, WMax);
-            TGraphErrors* graph = new TGraphErrors(numberW);
+            std::string title = "Q^{2} = " + to_string_with_precision(STEPS_Q2[2 * i], 1) + "-" + to_string_with_precision(STEPS_Q2[2 * i + 1], 1) + " GeV^{2}; W, GeV; Yield";
+            TH1D* hist = new TH1D(nameHist.c_str(), title.c_str(), NUMBER_W, W_MIN, W_MAX);
+            TGraphErrors* graph = new TGraphErrors(NUMBER_W);
 
-            for (int j = 0; j < numberW; j++) {
+            for (int j = 0; j < NUMBER_W; j++) {
                 yPoints[j] = sqrt(2 * M_PI) * fitFuncs[i][j]->GetParameter(0) * abs(fitFuncs[i][j]->GetParameter(2)) / missingMasses[i][j]->GetXaxis()->GetBinWidth(1);
                 eyPoints[j] = yPoints[j] * sqrt(pow(fitFuncs[i][j]->GetParError(0) / fitFuncs[i][j]->GetParameter(0), 2) + pow(fitFuncs[i][j]->GetParError(2) / fitFuncs[i][j]->GetParameter(2), 2));
 
                 hist->SetBinContent(j + 1, yPoints[j]);
                 hist->SetBinError(j + 1, eyPoints[j]);
 
-                graph->SetPoint(j, WMin + (j + 0.5) * (WMax - WMin) / numberW, yPoints[j]);
-                graph->SetPointError(j, 0.5 * (WMax - WMin) / numberW, eyPoints[j]);
+                graph->SetPoint(j, W_MIN + (j + 0.5) * (W_MAX - W_MIN) / NUMBER_W, yPoints[j]);
+                graph->SetPointError(j, 0.5 * (W_MAX - W_MIN) / NUMBER_W, eyPoints[j]);
             }
 
             graph->SetLineWidth(2);
@@ -319,18 +319,18 @@ public:
         const double MM_Range[36] = { 1.00, 1.00, 1.00, 1.02, 1.04, 1.07, 1.09, 1.10, 1.11, 1.12, 1.12, 1.10, 1.08, 1.08, 1.08, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10 };
         const double MM_downEnge = 0.83;
 
-        TFile inputFile(missingMassesFile.c_str(), "READ");
+        TFile inputFile(MM_FILE.c_str(), "READ");
         if (inputFile.IsZombie()) {
-            throw std::runtime_error("Error: Cannot open file " + std::string(missingMassesFile));
+            throw std::runtime_error("Error: Cannot open file " + std::string(MM_FILE));
         }
         
-        for (int i = 0; i < numberQQ; i++) {
-            double yPoints[numberW];
-            double eyPoints[numberW];
+        for (int i = 0; i < NUMBER_Q2; i++) {
+            double yPoints[NUMBER_W];
+            double eyPoints[NUMBER_W];
 
             // elementQ[i]->Divide(6, 6);
 
-            for (int j = 0; j < numberW; j++) {
+            for (int j = 0; j < NUMBER_W; j++) {
 
                 if (j % graphNum == 0) {
                     elementQ[i * figureNum + (j / graphNum)]->Divide(3, 3);
@@ -392,11 +392,11 @@ public:
             // elementQ[i]->SaveAs(fig_MM_elements_name.c_str());
 
             std::string nameHist = "YIELD " + std::to_string(i + 1);
-            std::string title = "Q^{2} = " + to_string_with_precision(QQedge[2 * i], 1) + "-" + to_string_with_precision(QQedge[2 * i + 1], 1) + " GeV^{2}; W, GeV; Yield";
-            TH1D* hist = new TH1D(nameHist.c_str(), title.c_str(), numberW, WMin, WMax);
-            TGraphErrors* graph = new TGraphErrors(numberW);
+            std::string title = "Q^{2} = " + to_string_with_precision(STEPS_Q2[2 * i], 1) + "-" + to_string_with_precision(STEPS_Q2[2 * i + 1], 1) + " GeV^{2}; W, GeV; Yield";
+            TH1D* hist = new TH1D(nameHist.c_str(), title.c_str(), NUMBER_W, W_MIN, W_MAX);
+            TGraphErrors* graph = new TGraphErrors(NUMBER_W);
 
-            for (int j = 0; j < numberW; j++) {
+            for (int j = 0; j < NUMBER_W; j++) {
                 yPoints[j] = sqrt(2 * M_PI) * fitFuncs[i][j]->GetParameter(0) * abs(fitFuncs[i][j]->GetParameter(2)) / missingMasses[i][j]->GetXaxis()->GetBinWidth(1);
                 eyPoints[j] = yPoints[j] * sqrt(pow(fitFuncs[i][j]->GetParError(0) / fitFuncs[i][j]->GetParameter(0), 2) + pow(fitFuncs[i][j]->GetParError(2) / fitFuncs[i][j]->GetParameter(2), 2));
 
@@ -414,8 +414,8 @@ public:
                 hist->SetBinContent(j + 1, yPoints[j]);
                 hist->SetBinError(j + 1, eyPoints[j]);
 
-                graph->SetPoint(j, WMin + (j + 0.5) * (WMax - WMin) / numberW, yPoints[j]);
-                graph->SetPointError(j, 0.5 * (WMax - WMin) / numberW, eyPoints[j]);
+                graph->SetPoint(j, W_MIN + (j + 0.5) * (W_MAX - W_MIN) / NUMBER_W, yPoints[j]);
+                graph->SetPointError(j, 0.5 * (W_MAX - W_MIN) / NUMBER_W, eyPoints[j]);
             }
 
             graph->SetLineWidth(2);
@@ -441,18 +441,18 @@ public:
         const double D_Peak[36] = { 0.92, 0.92, 0.92, 0.92, 0.94, 0.94, 0.96, 0.96, 0.98, 1.08, 1.08, 1.12, 1.14, 1.16, 1.16, 1.18, 1.20, 1.20, 1.22, 1.22, 1.22, 1.22, 1.22, 1.22, 1.22, 1.22, 1.22, 1.22, 1.22, 1.22, 1.22, 1.22, 1.22, 1.22, 1.22, 1.22 };
         const double MM_downEnge = 0.80;
 
-        TFile inputFile(missingMassesFile.c_str(), "READ");
+        TFile inputFile(MM_FILE.c_str(), "READ");
         if (inputFile.IsZombie()) {
-            throw std::runtime_error("Error: Cannot open file " + std::string(missingMassesFile));
+            throw std::runtime_error("Error: Cannot open file " + std::string(MM_FILE));
         }
         
-        for (int i = 0; i < numberQQ; i++) {
-            double yPoints[numberW];
-            double eyPoints[numberW];
+        for (int i = 0; i < NUMBER_Q2; i++) {
+            double yPoints[NUMBER_W];
+            double eyPoints[NUMBER_W];
 
             // elementQ[i]->Divide(6, 6);
 
-            for (int j = 0; j < numberW; j++) {
+            for (int j = 0; j < NUMBER_W; j++) {
 
                 if (j % graphNum == 0) {
                     elementQ[i * figureNum + (j / graphNum)]->Divide(3, 3);
@@ -552,11 +552,11 @@ public:
             // elementQ[i]->SaveAs(fig_MM_elements_name.c_str());
 
             std::string nameHist = "YIELD " + std::to_string(i + 1);
-            std::string title = "Q^{2} = " + to_string_with_precision(QQedge[2 * i], 1) + "-" + to_string_with_precision(QQedge[2 * i + 1], 1) + " GeV^{2}; W, GeV; Yield";
-            TH1D* hist = new TH1D(nameHist.c_str(), title.c_str(), numberW, WMin, WMax);
-            TGraphErrors* graph = new TGraphErrors(numberW);
+            std::string title = "Q^{2} = " + to_string_with_precision(STEPS_Q2[2 * i], 1) + "-" + to_string_with_precision(STEPS_Q2[2 * i + 1], 1) + " GeV^{2}; W, GeV; Yield";
+            TH1D* hist = new TH1D(nameHist.c_str(), title.c_str(), NUMBER_W, W_MIN, W_MAX);
+            TGraphErrors* graph = new TGraphErrors(NUMBER_W);
 
-            for (int j = 0; j < numberW; j++) {
+            for (int j = 0; j < NUMBER_W; j++) {
                 // yPoints[j] = sqrt(2 * M_PI) * fitFuncs[i][j]->GetParameter(0) * abs(fitFuncs[i][j]->GetParameter(2)) / missingMasses[i][j]->GetXaxis()->GetBinWidth(1);
                 // eyPoints[j] = yPoints[j] * sqrt(pow(fitFuncs[i][j]->GetParError(0) / fitFuncs[i][j]->GetParameter(0), 2) + pow(fitFuncs[i][j]->GetParError(2) / fitFuncs[i][j]->GetParameter(2), 2));
 
@@ -574,8 +574,8 @@ public:
                 hist->SetBinContent(j + 1, yPoints[j]);
                 hist->SetBinError(j + 1, eyPoints[j]);
 
-                graph->SetPoint(j, WMin + (j + 0.5) * (WMax - WMin) / numberW, yPoints[j]);
-                graph->SetPointError(j, 0.5 * (WMax - WMin) / numberW, eyPoints[j]);
+                graph->SetPoint(j, W_MIN + (j + 0.5) * (W_MAX - W_MIN) / NUMBER_W, yPoints[j]);
+                graph->SetPointError(j, 0.5 * (W_MAX - W_MIN) / NUMBER_W, eyPoints[j]);
             }
 
             graph->SetLineWidth(2);
@@ -596,18 +596,18 @@ public:
     }
 
 private:
-    // const char* missingMassesFile = "missingMasses_50.root";
-    // const char* missingMassesFile = "missingMasses_25.root";
-    std::string missingMassesFile;
+    // const char* MM_FILE = "missingMasses_50.root";
+    // const char* MM_FILE = "missingMasses_25.root";
+    std::string MM_FILE;
     const char* fittingParamFile = "fitting_parameters.txt";
     // const char* fittingParamFile = "fitting_parameters_simple.txt";
 
-    // const int numberW = 18;
-    int numberW;
-    const int numberQQ = 4;
-    const double QQedge[8] = { 0.4, 0.6, 0.6, 1.0, 1.0, 2.0, 2.0, 3.5 };
-    const double WMin = 1.1;
-    const double WMax = 2.0;
+    // const int NUMBER_W = 18;
+    int NUMBER_W;
+    const int NUMBER_Q2 = 4;
+    const double STEPS_Q2[8] = { 0.4, 0.6, 0.6, 1.0, 1.0, 2.0, 2.0, 3.5 };
+    const double W_MIN = 1.1;
+    const double W_MAX = 2.0;
     int figureNum;
     int graphNum;
 
@@ -622,7 +622,7 @@ private:
     std::vector<FitParameters> readFittingParameters() {
         std::ifstream inFile(fittingParamFile);
         if (!inFile.is_open()) {
-            std::cerr << "Ошибка: не удалось открыть файл " << missingMassesFile << " для чтения!" << std::endl;
+            std::cerr << "Ошибка: не удалось открыть файл " << MM_FILE << " для чтения!" << std::endl;
             return {};
         }
 

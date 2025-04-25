@@ -31,15 +31,15 @@ class Neutron_PiPlus_Yield_Analysis_MM : public HipoDataAnalysis {
 public:
     Neutron_PiPlus_Yield_Analysis_MM(const vector<string> &dataFileNames) : HipoDataAnalysis(dataFileNames) {
 
-        missingMasses.resize(numberQQ, vector<TH1F*>(numberW, nullptr));
-        fitFuncs.resize(numberQQ, vector<TF1*>(numberW, nullptr));
-        elementQ.resize(numberQQ, nullptr);
-        yieldAndW.resize(numberQQ, nullptr);
+        missingMasses.resize(NUMBER_Q2, vector<TH1F*>(NUMBER_W, nullptr));
+        fitFuncs.resize(NUMBER_Q2, vector<TF1*>(NUMBER_W, nullptr));
+        elementQ.resize(NUMBER_Q2, nullptr);
+        yieldAndW.resize(NUMBER_Q2, nullptr);
 
-        for (int i = 0; i < numberQQ; i++) {
-            for (int j = 0; j < numberW; j++) {
+        for (int i = 0; i < NUMBER_Q2; i++) {
+            for (int j = 0; j < NUMBER_W; j++) {
                 std::string nameHist = "CELL " + std::to_string(i + 1) + "-" + std::to_string(j + 1);
-                std::string title = "MM in cell Q^{2} = " + to_string_with_precision(QQedge[2 * i], 1) + "-" + to_string_with_precision(QQedge[2 * i + 1], 1) + "GeV^{2}, W = " + to_string_with_precision(WMin + WStep * j) + "-" + to_string_with_precision(WMin + WStep * (j + 1)) + " GeV; MM, GeV";
+                std::string title = "MM in cell Q^{2} = " + to_string_with_precision(STEPS_Q2[2 * i], 1) + "-" + to_string_with_precision(STEPS_Q2[2 * i + 1], 1) + "GeV^{2}, W = " + to_string_with_precision(W_MIN + STEP_W * j) + "-" + to_string_with_precision(W_MIN + STEP_W * (j + 1)) + " GeV; MM, GeV";
                 missingMasses[i][j] = new TH1F(nameHist.c_str(), title.c_str(), 80, 0.8, 1.6);
                 // missingMasses[i][j] = new TH1F(nameHist.c_str(), title.c_str(), 40, 0.8, 1.6);
 
@@ -108,8 +108,8 @@ public:
     }
 
     ~Neutron_PiPlus_Yield_Analysis_MM() {
-        for (int i = 0; i < numberQQ; i++) {
-            for (int j = 0; j < numberW; j++) {
+        for (int i = 0; i < NUMBER_Q2; i++) {
+            for (int j = 0; j < NUMBER_W; j++) {
                 delete missingMasses[i][j];
                 delete fitFuncs[i][j];
             }
@@ -144,7 +144,7 @@ public:
         double qq = -(BEAM - electron).M2();
 
         int w_bin = getWBin(w);
-        int qq_bin = getQQBin(qq);
+        int qq_bin = getQ2Bin(qq);
 
         if (w_bin == -1 || qq_bin == -1) {
             return;
@@ -154,20 +154,20 @@ public:
     }
 
     void results() override {
-        for (int i = 0; i < numberQQ; i++) {
-            double yPoints[numberW];
-            double eyPoints[numberW];
+        for (int i = 0; i < NUMBER_Q2; i++) {
+            double yPoints[NUMBER_W];
+            double eyPoints[NUMBER_W];
 
             elementQ[i]->Divide(6, 3);
 
-            for (int j = 0; j < numberW; j++) {
+            for (int j = 0; j < NUMBER_W; j++) {
                 elementQ[i]->cd(j + 1);
 
                 std::string fitFuncName = "FitFunc_" + std::to_string(i + 1) + "-" + std::to_string(j + 1);
                 if (j < numW_over_1) {
                     fitFuncs[i][j]->SetRange(0.80, 1.00);
                 } else if (j < numW_over_2) {
-                    fitFuncs[i][j]->SetRange(0.80, WMin + j * WStep - 0.15);
+                    fitFuncs[i][j]->SetRange(0.80, W_MIN + j * STEP_W - 0.15);
                 } else {
                     fitFuncs[i][j]->SetRange(0.80, 1.50);
                 }
@@ -182,10 +182,10 @@ public:
             elementQ[i]->SaveAs(fig_MM_elements_name.c_str());
 
             std::string nameHist = "hist" + std::to_string(i + 1);
-            std::string title = "Q^{2} = " + to_string_with_precision(QQedge[2 * i], 1) + "-" + to_string_with_precision(QQedge[2 * i + 1], 1) + " GeV^{2}; W, GeV; Yield";
-            TH1D* hist = new TH1D(nameHist.c_str(), title.c_str(), numberW, WMin, WMax);
+            std::string title = "Q^{2} = " + to_string_with_precision(STEPS_Q2[2 * i], 1) + "-" + to_string_with_precision(STEPS_Q2[2 * i + 1], 1) + " GeV^{2}; W, GeV; Yield";
+            TH1D* hist = new TH1D(nameHist.c_str(), title.c_str(), NUMBER_W, W_MIN, W_MAX);
 
-            for (int j = 0; j < numberW; j++) {
+            for (int j = 0; j < NUMBER_W; j++) {
                 yPoints[j] = sqrt(2 * M_PI) * fitFuncs[i][j]->GetParameter(0) * abs(fitFuncs[i][j]->GetParameter(2)) / missingMasses[i][j]->GetXaxis()->GetBinWidth(1);
                 eyPoints[j] = yPoints[j] * sqrt(pow(fitFuncs[i][j]->GetParError(0) / fitFuncs[i][j]->GetParameter(0), 2) + pow(fitFuncs[i][j]->GetParError(2) / fitFuncs[i][j]->GetParameter(2), 2));
 
@@ -205,16 +205,16 @@ public:
     }
 
 private:
-    const double WMin = 1.1;
-    const double WMax = 2.0;
+    const double W_MIN = 1.1;
+    const double W_MAX = 2.0;
 
-    const int numberW = 18;
+    const int NUMBER_W = 18;
     const int numW_over_1 = 6;
     const int numW_over_2 = 12;
-    const int numberQQ = 4;
+    const int NUMBER_Q2 = 4;
 
-    const double WStep = (WMax - WMin) / numberW;
-    const double QQedge[8] = { 0.4, 0.6, 0.6, 1.0, 1.0, 2.0, 2.0, 3.5 };
+    const double STEP_W = (W_MAX - W_MIN) / NUMBER_W;
+    const double STEPS_Q2[8] = { 0.4, 0.6, 0.6, 1.0, 1.0, 2.0, 2.0, 3.5 };
 
 
     vector<vector<TH1F*>> missingMasses;
@@ -224,16 +224,16 @@ private:
     vector<TCanvas*> yieldAndW;
 
     int getWBin(double w) {
-        int bin = (int) ((w - WMin) / WStep);
-        if (bin < 0 || bin >= numberW) {
+        int bin = (int) ((w - W_MIN) / STEP_W);
+        if (bin < 0 || bin >= NUMBER_W) {
             return -1;
         }
         return bin;
     }
 
-    int getQQBin(double qq) {
-        for (int i = 0; i < numberQQ; i++) {
-            if (qq > QQedge[2 * i] && qq < QQedge[2 * i + 1]) {
+    int getQ2Bin(double qq) {
+        for (int i = 0; i < NUMBER_Q2; i++) {
+            if (qq > STEPS_Q2[2 * i] && qq < STEPS_Q2[2 * i + 1]) {
                 return i;
             }
         }

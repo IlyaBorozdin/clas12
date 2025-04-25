@@ -270,10 +270,10 @@ private:
 class Neutron_PiPlus_Detailed_Analysis_MM : public HipoDataAnalysis {
 public:
     Neutron_PiPlus_Detailed_Analysis_MM(const vector<string> &dataFileNames) : HipoDataAnalysis(dataFileNames) {
-        missingMasses.resize(numberQQ * numberW);
-        fitFuncs.resize(numberQQ * numberW);
+        missingMasses.resize(NUMBER_Q2 * NUMBER_W);
+        fitFuncs.resize(NUMBER_Q2 * NUMBER_W);
 
-        for (int i = 0; i < numberQQ * numberW; i++) {
+        for (int i = 0; i < NUMBER_Q2 * NUMBER_W; i++) {
             std::string nameHist = "CELL " + std::to_string(i + 1);
             std::string title = "Missing Mass in CELL " + std::to_string(i + 1) + "; MM, GeV";
             missingMasses[i] = new TH1F(nameHist.c_str(), title.c_str(), 40, 0.8, 1.6);
@@ -326,7 +326,7 @@ public:
     }
 
     ~Neutron_PiPlus_Detailed_Analysis_MM() {
-        for (int i = 0; i < numberQQ * numberW; i++) {
+        for (int i = 0; i < NUMBER_Q2 * NUMBER_W; i++) {
             delete missingMasses[i];
             delete fitFuncs[i];
         }
@@ -372,22 +372,22 @@ public:
     }
 
     void results() override {
-        double xPoints[numberW];
-        double y1Points[numberW];
-        double y2Points[numberW];
-        double exPoints[numberW]; // Погрешности по оси x
-        double ey1Points[numberW]; // Погрешности по оси y для первого графика
-        double ey2Points[numberW]; // Погрешности по оси y для второго графика
+        double xPoints[NUMBER_W];
+        double y1Points[NUMBER_W];
+        double y2Points[NUMBER_W];
+        double exPoints[NUMBER_W]; // Погрешности по оси x
+        double ey1Points[NUMBER_W]; // Погрешности по оси y для первого графика
+        double ey2Points[NUMBER_W]; // Погрешности по оси y для второго графика
 
         elementQ1->Divide(6, 3);
         elementQ2->Divide(6, 3);
 
-        for (int i = 0; i < numberQQ * numberW; i++) {
-            if (i < numberW) {
+        for (int i = 0; i < NUMBER_Q2 * NUMBER_W; i++) {
+            if (i < NUMBER_W) {
                 elementQ1->cd(i + 1);
             }
             else {
-                elementQ2->cd(i - numberW + 1);
+                elementQ2->cd(i - NUMBER_W + 1);
             }
 
             std::string fitFuncName = "FitFunc_" + std::to_string(i + 1);
@@ -403,18 +403,18 @@ public:
         elementQ2->Update();
         elementQ2->SaveAs("MM_elements_2.png");
 
-        for (int i = 0; i < numberW; i++) {
-            xPoints[i] = WMin + (i + 0.5) * WStep;
-            exPoints[i] = 0.5 * WStep;
+        for (int i = 0; i < NUMBER_W; i++) {
+            xPoints[i] = W_MIN + (i + 0.5) * STEP_W;
+            exPoints[i] = 0.5 * STEP_W;
             y1Points[i] = sqrt(2 * M_PI) * fitFuncs[i]->GetParameter(0) * abs(fitFuncs[i]->GetParameter(2)) / missingMasses[i]->GetXaxis()->GetBinWidth(1);
-            y2Points[i] = sqrt(2 * M_PI) * fitFuncs[i + numberW]->GetParameter(0) * abs(fitFuncs[i + numberW]->GetParameter(2)) / missingMasses[i + numberW]->GetXaxis()->GetBinWidth(1);
+            y2Points[i] = sqrt(2 * M_PI) * fitFuncs[i + NUMBER_W]->GetParameter(0) * abs(fitFuncs[i + NUMBER_W]->GetParameter(2)) / missingMasses[i + NUMBER_W]->GetXaxis()->GetBinWidth(1);
 
             ey1Points[i] = y1Points[i] * sqrt(pow(fitFuncs[i]->GetParError(0) / fitFuncs[i]->GetParameter(0), 2) + pow(fitFuncs[i]->GetParError(2) / fitFuncs[i]->GetParameter(2), 2));
-            ey2Points[i] = y1Points[i] * sqrt(pow(fitFuncs[i + numberW]->GetParError(0) / fitFuncs[i + numberW]->GetParameter(0), 2) + pow(fitFuncs[i + numberW]->GetParError(2) / fitFuncs[i + numberW]->GetParameter(2), 2));
+            ey2Points[i] = y1Points[i] * sqrt(pow(fitFuncs[i + NUMBER_W]->GetParError(0) / fitFuncs[i + NUMBER_W]->GetParameter(0), 2) + pow(fitFuncs[i + NUMBER_W]->GetParError(2) / fitFuncs[i + NUMBER_W]->GetParameter(2), 2));
         }
 
-        TGraphErrors* graph1 = new TGraphErrors(numberW, xPoints, y1Points, exPoints, ey1Points);
-        TGraphErrors* graph2 = new TGraphErrors(numberW, xPoints, y2Points, exPoints, ey2Points);
+        TGraphErrors* graph1 = new TGraphErrors(NUMBER_W, xPoints, y1Points, exPoints, ey1Points);
+        TGraphErrors* graph2 = new TGraphErrors(NUMBER_W, xPoints, y2Points, exPoints, ey2Points);
 
         graph1->SetMarkerStyle(20);
         graph1->SetTitle("Q^{2} = 0.4 - 0.6 GeV^{2}");
@@ -443,17 +443,17 @@ public:
     }
 
 private:
-    const double WStep = 0.050;
-    const double WMin = 1.1;
-    const double WMax = 2.0;
+    const double STEP_W = 0.050;
+    const double W_MIN = 1.1;
+    const double W_MAX = 2.0;
 
     const double QQ1min = 0.4;
     const double QQ1max = 0.6;
     const double QQ2min = 0.6;
     const double QQ2max = 1.0;
 
-    const int numberW = 18;
-    const int numberQQ = 2;
+    const int NUMBER_W = 18;
+    const int NUMBER_Q2 = 2;
 
     vector<TH1F*> missingMasses;
     TH1F* exitFunction;
@@ -467,13 +467,13 @@ private:
 
     int getCell(double W, double QQ) {
         if (
-            W > WMax ||
-            W < WMin ||
+            W > W_MAX ||
+            W < W_MIN ||
             QQ > QQ2max ||
             QQ < QQ1min
         ) {
             return -1;
         }
-        return ((int) ((W - WMin) / WStep)) + (QQ > QQ2min ? numberW : 0);
+        return ((int) ((W - W_MIN) / STEP_W)) + (QQ > QQ2min ? NUMBER_W : 0);
     }
 };
