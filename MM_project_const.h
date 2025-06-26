@@ -5,8 +5,8 @@
 const double W_MIN = 1.1;
 const double W_MAX = 2.0;
 
-// const int NUMBER_W = 18;
-const int NUMBER_W = 36;
+const int NUMBER_W = 18;
+// const int NUMBER_W = 36;
 const int NUMBER_Q2 = 4;
 const int NUMBER_COS_THETA = 10;
 const int NUMBER_PHI = 10;
@@ -26,7 +26,8 @@ const int ENTRIES_MIN = 600;
 
 // std::string MM_FILE = "missingMasses_50.root";
 // std::string MM_FILE = "missingMasses_25.root";
-std::string MM_FILE = "missingMasses_25_4D.root";
+// std::string MM_FILE = "missingMasses_25_4D.root";
+std::string MM_FILE = "missingMasses_50_4D.root";
 std::string IMG_BUFF = "img/buff/";
 
 std::string nameHistMM(int i, int j) {
