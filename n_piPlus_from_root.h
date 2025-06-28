@@ -26,6 +26,9 @@ std::string to_string_with_precision(double value, int precision = 3) {
     return out.str();
 }
 
+/**
+ * Сразу записывает гистограммы с MM в .root, 2d метод
+*/
 class Neutron_PiPlus_Root_MM : public RootDataAnalysis {
 public:
     Neutron_PiPlus_Root_MM(const std::string& rootFileName) : RootDataAnalysis(rootFileName) {
@@ -101,6 +104,9 @@ private:
     }
 };
 
+/**
+ * Сразу записывает гистограммы с MM в .root, 4d метод
+*/
 class Neutron_PiPlus_Root_4D_MM : public RootDataAnalysis {
 public:
     Neutron_PiPlus_Root_4D_MM(const std::string& rootFileName) : RootDataAnalysis(rootFileName) {
@@ -231,6 +237,9 @@ private:
     }
 };
 
+/**
+ * Записывает дерево с ячейкой в .root, 4d метод
+*/
 class SortedOutputCreator : public RootDataAnalysis {
 public:
     SortedOutputCreator(const std::string& rootFileName) : RootDataAnalysis(rootFileName), fileSorted("sorted_output.root", "RECREATE")  {

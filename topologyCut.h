@@ -1,5 +1,7 @@
 #pragma once
 
+#include "source/rg-k.h"
+
 class TopologyCut : public Cut<const DataBanks&> {
 public:
     bool operator()(const DataBanks& banks) override {

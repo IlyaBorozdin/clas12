@@ -10,11 +10,15 @@
 #include "TCanvas.h"
 #include "TGraphErrors.h"
 
-#include "MM_project_const.h"
+// #include "MM_project_const.h"
 #include "n_piPlus_from_root.h"
 
 using namespace std;
 
+/**
+ * Базовый класс
+ * работа с 2д гистограммами
+*/
 class MM_RootDataAnalysis {
 public:
     MM_RootDataAnalysis() : file(MM_FILE.c_str(), "READ") {
@@ -51,6 +55,11 @@ protected:
     vector<vector<TH1F*>> missingMasses;
 };
 
+/**
+ * По заготовленной гистограмме 2д:
+ * производит аппроксимацию одним симметричным гауссом с фоном,
+ * печетает графики
+*/
 class MM_ShortFitAnalysis : public MM_RootDataAnalysis {
 public:
     MM_ShortFitAnalysis() {
@@ -189,6 +198,11 @@ private:
     }
 };
 
+/**
+ * По заготовленной гистограмме 2д:
+ * производит аппроксимацию двумя гауссами (ассиметрично) с фоном,
+ * печетает графики
+*/
 class MM_FullFitAnalysis : public MM_RootDataAnalysis {
 public:
     MM_FullFitAnalysis() {
@@ -367,6 +381,10 @@ private:
     }
 };
 
+/**
+ * Базовый класс
+ * работа с 4d гистограммами
+*/
 class MM_RootDataAnalysis_4D {
 public:
     MM_RootDataAnalysis_4D(std::string readFileName = MM_FILE) : file(readFileName.c_str(), "READ") {
@@ -424,6 +442,10 @@ protected:
     vector<vector<vector<vector<TH1F*>>>> missingMasses;
 };
 
+/**
+ * Побочный класс
+ * по заготовленной гистограмме считает количество событий, строит график
+*/
 class MM_EntriesAnalysis : public MM_RootDataAnalysis_4D {
 public:
     MM_EntriesAnalysis() {
@@ -454,6 +476,10 @@ private:
     TCanvas* cEntries;
 };
 
+/**
+ * Переделать,
+ * реализует аппроксимацию в две фазы
+*/
 class MM_TwoGaussPeakFit {
 public:
     MM_TwoGaussPeakFit(TF1* fullFitFunc) : fullFitFunc(fullFitFunc) {
@@ -550,6 +576,11 @@ private:
     double deltaPeak;
 };
 
+/**
+ * По гистограммам 4д 
+ * проводит аппроксимацию с использованием two_gauss_peak_fit
+ * создаёт файл дерево с параметрами аппроксимации
+*/
 class MM_FullFitAnalysis_4D : public MM_RootDataAnalysis_4D {
 public:
     MM_FullFitAnalysis_4D(const char* outFileName): file(outFileName, "RECREATE"), tree("FitData", "Tree with peaks' parameters") {
@@ -758,6 +789,11 @@ private:
     }
 };
 
+/**
+ * Базовый класс
+ * для работы с деревом параметров аппроксимации
+ * рисует графики
+*/
 class MM_FittedDataAnalysis_4D {
 public:
     MM_FittedDataAnalysis_4D(const char* outFileName) 
@@ -902,7 +938,12 @@ protected:
     }
 };
 
-
+/**
+ * Использовался однозначно для презентации
+ * Просто подготавливает срез экспериментальных данных после фитирования
+ * пробегается по делеву с параметрами аппроксимации
+ * строит графики
+*/
 class MM_FittedDataAnalysis_4D_PRESENTATION {
 public:
     MM_FittedDataAnalysis_4D_PRESENTATION(const char* outFileName) 
@@ -1365,6 +1406,9 @@ protected:
 };
 */
 
+/**
+ * Базовый класс для работы с деревом 4д данных
+*/
 class MM_RootSortedDataAnalysis_4D {
 public:
     MM_RootSortedDataAnalysis_4D() : file("sorted_output.root", "READ") {
@@ -1417,6 +1461,12 @@ protected:
     vector<vector<vector<vector<TTree*>>>> trees;
 };
 
+/**
+ * Пробегается по дереву 4д данных
+ * реализует гистограммы с переменных количеством бинов
+ * записывает гистограммы в файл
+ * Необходимо в будущем вынести алгоритм определения оптимального количества бинов
+*/
 class MM_FullSortedDataAnalysis_4D : public MM_RootSortedDataAnalysis_4D {
 public:
     MM_FullSortedDataAnalysis_4D() : outputFile("missingMasses_var50.root", "RECREATE") {
@@ -1488,6 +1538,10 @@ private:
     double MM;
 };
 
+/**
+ * Новая реализация метода фитирования
+ * В будущем разработать базовый класс
+*/
 class MM_TwoGaussPeakFitV2 {
 public:
     MM_TwoGaussPeakFitV2(TF1* fullFitFunc) : fullFitFunc(fullFitFunc) {
@@ -1585,6 +1639,11 @@ private:
     double deltaPeak;
 };
 
+/**
+ * Работает с 4д гистограммами у которых переменное колиество бинов 
+ * Проводит аппроксимацию данных второй версией фита
+ * Создаёт дерево с параметрами аппроксимации и записывает его в файл
+*/
 class MM_FittingSortedDataAnalysis_4D : public MM_RootDataAnalysis_4D {
 public:
     MM_FittingSortedDataAnalysis_4D(const char* outFileName): MM_RootDataAnalysis_4D("missingMasses_var50.root"), file(outFileName, "RECREATE"), tree("FitData", "Tree with peaks' parameters") {
@@ -1786,6 +1845,10 @@ private:
     }
 };
 
+/**
+ * По записанным в дерево параметрам аппроксимации гистограмм с переменным количеством бинов:
+ * просто строит графики
+*/
 class MM_DrawFittedSortedDataAnalysis_4D {
 public:
     MM_DrawFittedSortedDataAnalysis_4D(const char* outFileName) 
@@ -1914,6 +1977,9 @@ private:
     }
 };
 
+/**
+ * То же что предыдущий, только по первой аппроксимации, то есть один симметричный пик
+*/
 class MM_DrawFittedShortSortedDataAnalysis_4D {
 public:
     MM_DrawFittedShortSortedDataAnalysis_4D(const char* outFileName) 
@@ -2043,6 +2109,10 @@ private:
     }
 };
 
+/**
+ * презентация среза данных
+ * не реализовано
+*/
 class MM_FittedSortedDataAnalysis_4D_PRESENTATION {
 public:
     MM_FittedSortedDataAnalysis_4D_PRESENTATION(const char* outFileName) 

@@ -6,12 +6,13 @@
 
 #include <TH1F.h>
 #include <TH2F.h>
-#include "TGraph.h"
+#include <TGraph.h>
 #include <TLine.h>
 #include <TCanvas.h>
 
-#include "dataAnalysis.h"
+// #include "dataAnalysis.h"
 #include "constants.h"
+#include "dataBanks.h"
 
 using namespace std;
 

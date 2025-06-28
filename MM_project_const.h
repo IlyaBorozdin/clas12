@@ -5,9 +5,9 @@
 const double W_MIN = 1.1;
 const double W_MAX = 2.0;
 
+const int NUMBER_Q2 = 4;
 const int NUMBER_W = 18;
 // const int NUMBER_W = 36;
-const int NUMBER_Q2 = 4;
 const int NUMBER_COS_THETA = 10;
 const int NUMBER_PHI = 10;
 
@@ -16,20 +16,36 @@ const double STEPS_Q2[8] = { 0.4, 0.6, 0.6, 1.0, 1.0, 2.0, 2.0, 3.5 };
 const double STEP_COS_THETA = 2.0 / NUMBER_COS_THETA;
 const double STEP_PHI = 2 * M_PI / NUMBER_PHI;
 
+/**
+ * Необходимо использовать нефиксированные границы
+*/
 const double MM_MIN = 0.8;
 const double MM_MAX = 1.6;
+
+/**
+ * Необходимо будет отказаться от фиксированного числа бинов по MM
+*/
 // const int NUMBER_MM = 80;
 const int NUMBER_MM = 50;
 const double MM_BIN_WIDTH = (MM_MAX - MM_MIN) / NUMBER_MM;
 
+/**
+ * Слишко много, будет определяться программно
+*/
 const int ENTRIES_MIN = 600;
 
+/**
+ * С имена файлов беда
+*/
 // std::string MM_FILE = "missingMasses_50.root";
 // std::string MM_FILE = "missingMasses_25.root";
 // std::string MM_FILE = "missingMasses_25_4D.root";
 std::string MM_FILE = "missingMasses_50_4D.root";
 std::string IMG_BUFF = "img/buff/";
 
+/**
+ * Убрать из этого файла, здесь только константы для настроек
+*/
 std::string nameHistMM(int i, int j) {
     return "CELL " + std::to_string(i + 1) + "-" + std::to_string(j + 1);
 }

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <functional>
+// #include <functional>
 #include <vector>
 
-#include "dataBanks.h"
-#include "constants.h"
+// #include "dataBanks.h"
+// #include "constants.h"
 #include "rg-k.h"
 
 using CutWrapper = Cut<const DataBanks&>;

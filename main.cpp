@@ -6,9 +6,14 @@
 //#include "neutron_piPlus.h"
 //#include "yield_in_q2-w.h"
 //#include "choiceRoot.h"
-#include "n_piPlus_from_root.h"
+//#include "n_piPlus_from_root.h"
 //#include "MM_root_analysis.h"
-#include "MM_RootDataAnalysis.h"
+//#include "MM_RootDataAnalysis.h"
+
+#include "hipoConversionStep.h"
+#include "binnedTreeStep.h"
+#include "histBuilderStep.h"
+#include "source/ManageClasses/analysisManager.h"
 
 int main() {
 
@@ -62,8 +67,29 @@ int main() {
     // MM_DrawFittedShortSortedDataAnalysis_4D test3("fitMM_var50.root");
     // test3.analysisCycle();
 
-    MM_FittedSortedDataAnalysis_4D_PRESENTATION test4("fitMM_var50.root");
-    test4.analysisCycle();
+    // MM_FittedSortedDataAnalysis_4D_PRESENTATION test4("fitMM_var50.root");
+    // test4.analysisCycle();
+
+    auto A = std::make_shared<HipoConversionStep>(
+        "A", "iv/pass2.txt", "data/output.root"
+    );
+    auto B = std::make_shared<BinnedTreeStep>(
+        "B", "data/output.root", "data/binned.root"
+    );
+    auto C = std::make_shared<HistBuilderStep>(
+        "C", "data/binned.root", "data/histed.root"
+    );
+
+    auto branch = std::make_shared<AnalysisBranch>();
+    branch->addStep(A);
+    branch->addStep(B);
+    branch->addStep(C);
+
+    AnalysisManager manager;
+    manager.addBranch("default", branch);
+
+    manager.describe();
+    manager.runBranch("default");
 
     return 0;
 }
