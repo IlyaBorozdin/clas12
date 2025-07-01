@@ -4,7 +4,7 @@
 #include <TVector3.h>
 #include <cmath>
 
-#include "source/ManageClasses/rootDataAnalysisStep.h"
+#include "rootDataAnalysisStep.h"
 #include "source/constants.h"
 #include "MM_project_const.h"
 #include "MM_project_utils.h"
@@ -67,7 +67,7 @@ protected:
     std::vector<std::vector<std::vector<std::vector<TTree*>>>> trees;
 
     // --- Файл, в который будут сохранены выходные деревья ---
-    TFile* outputRootFile = nullptr;
+    // TFile* outputRootFile = nullptr;
 
     // --- Переменные, сохраняемые в деревья ---
     double MM = 0.0, Q2 = 0.0, W = 0.0, cos_theta = 0.0, phi_pi = 0.0;
@@ -87,12 +87,6 @@ protected:
         }
 
         log("Initializing...", LogLevel::Info);
-        outputRootFile = TFile::Open(outputFileName.c_str(), "RECREATE");
-        if (!outputRootFile || outputRootFile->IsZombie()) {
-            log("Failed to open output file: " + outputFileName, LogLevel::Error);
-            return false;
-        }
-        log("Output ROOT file opened: " + outputFileName, LogLevel::Debug);
 
         // Создание структуры деревьев: 4D сетка по (Q², W, cosθ, φ)
         trees.resize(NUMBER_Q2);
@@ -128,15 +122,13 @@ protected:
      */
     bool finalize() override {
         log("Writing all TTrees to output file...", LogLevel::Info);
-        outputRootFile->cd();
+        outputFile->cd();
         for (int i = 0; i < NUMBER_Q2; ++i)
             for (int j = 0; j < NUMBER_W; ++j)
                 for (int k = 0; k < NUMBER_COS_THETA; ++k)
                     for (int l = 0; l < NUMBER_PHI; ++l)
                         trees[i][j][k][l]->Write();
 
-        outputRootFile->Close();
-        log("Output file successfully written and closed.", LogLevel::Info);
         log("Event processing summary:", LogLevel::Info);
         log("Total processed events: " + std::to_string(eventsProcessed) 
             + " out of " + std::to_string(totalEvents), LogLevel::Info);
@@ -151,7 +143,7 @@ protected:
             log("No events were processed. Skipped stats are omitted.", LogLevel::Warning);
         }
 
-        return true;
+        return RootDataAnalysisStep::finalize();
     }
 
     /**

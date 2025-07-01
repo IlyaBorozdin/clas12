@@ -30,7 +30,6 @@ public:
         : RootStep(stepName, inputFileNames, outputFileName),
           inputTreeName(inputTreeName) {}
 
-    /// Деструктор: закрывает и удаляет входной файл, если он был открыт
     virtual ~RootTreeStep() = default;
 
 protected:

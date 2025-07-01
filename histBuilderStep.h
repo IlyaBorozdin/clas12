@@ -2,10 +2,11 @@
 
 #include <cmath>
 
-#include "TCanvas.h"
 #include "TH1F.h"
+#include "TTree.h"
 
-#include "source/ManageClasses/rootListDataAnalysisStep.h"
+// #include "source/ManageClasses/rootListDataAnalysisStep.h"
+#include "source/ManageClasses/rootListObjectAnalysisStep.h"
 #include "MM_project_const.h"
 #include "MM_project_utils.h"
 
@@ -17,12 +18,12 @@
  * имена которых кодируют позицию в сетке (i,j,k,l). Каждое дерево содержит
  * ветку "MM", и по ней строится одномерная гистограмма, записываемая в выходной файл.
  */
-class HistBuilderStep : public RootListDataAnalysisStep {
+class HistBuilderStep : public RootListObjectAnalysisStep<TTree> {
 public:
     HistBuilderStep(const std::string& stepName,
                     const std::string& inputFileName,
                     const std::string& outputFileName)
-        : RootListDataAnalysisStep(stepName, { {"main", inputFileName} }, cellGenerator, outputFileName) {}
+        : RootListObjectAnalysisStep<TTree>(stepName, { {"main", inputFileName} }, cellGenerator, outputFileName) {}
 
     virtual ~HistBuilderStep() = default;
 
@@ -32,24 +33,6 @@ protected:
     size_t printEvery = 2000;    ///< Частота логирования прогресса
 
     /**
-     * @brief Инициализация: открытие выходного файла и базовый шаг
-     */
-    bool initialize() override {
-        if (!RootListDataAnalysisStep::initialize()) {
-            return false;
-        }
-
-        log("Opening output file for histograms: " + outputFileName, LogLevel::Info);
-        outputFile = TFile::Open(outputFileName.c_str(), "RECREATE");
-        if (!outputFile || outputFile->IsZombie()) {
-            log("Failed to create output file: " + outputFileName, LogLevel::Error);
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * @brief Завершение шага: закрытие файла и отчёт
      */
     bool finalize() override {
@@ -57,29 +40,16 @@ protected:
         log("Processed trees: " + std::to_string(processedTrees), LogLevel::Info);
         log("Skipped trees due to missing branch or bad name: " + std::to_string(skippedTrees), LogLevel::Info);
 
-        if (!RootListDataAnalysisStep::finalize()) {
-            return false;
-        }
-
-        if (outputFile && outputFile->IsOpen()) {
-            outputFile->Close();
-        }
-        return RootListDataAnalysisStep::finalize();
+        return RootListObjectAnalysisStep<TTree>::finalize();
     }
 
     /**
      * @brief Обработка одного дерева: строим и сохраняем гистограмму MM
      */
-    void processTree(TTree* tree) override {
+    void processObject(TTree* tree) override {
         // Извлекаем (i, j, k, l) из имени
         int i, j, k, l;
         if (!parseCellName(tree->GetName(), i, j, k, l)) {
-            ++skippedTrees;
-            return;
-        }
-
-        // Привязываем переменную
-        if (tree->SetBranchAddress("MM", &MM) < 0) {
             ++skippedTrees;
             return;
         }
@@ -98,20 +68,17 @@ protected:
 
         outputFile->cd();
         hist->Write();
-        hist->SetDirectory(nullptr);
-        delete hist;
     }
 
 
     void logProgress() override {
         ++processedTrees;
-        if (processedTrees % printEvery == 0 || processedTrees == totalTrees) {
-            log("Processing tree " + std::to_string(processedTrees) + " / " + std::to_string(totalTrees), LogLevel::Info);
+        if (processedTrees % printEvery == 0 || processedTrees == totalObjects) {
+            log("Processing tree " + std::to_string(processedTrees) + " / " + std::to_string(totalObjects), LogLevel::Info);
         }
     }
 
 private:
-    TFile* outputFile;
     double MM;
 
     /**
@@ -148,8 +115,8 @@ private:
         double phiMaxDeg = STEP_PHI * (l + 1) * 180.0 / M_PI;
 
         return "MM: Q^{2} = " + formatFloat(q2Min, 1) + "-" + formatFloat(q2Max, 1) +
-            " GeV^{2}, W = " + formatFloat(wMin, 2) + "-" + formatFloat(wMax, 2) + " GeV, " +
-            "cos(θ) = " + formatFloat(cosThetaMin, 1) + "-" + formatFloat(cosThetaMax, 1) + ", " +
-            "φ = " + formatFloat(phiMinDeg, 0) + "^{o}-" + formatFloat(phiMaxDeg, 0) + "^{o}; MM, GeV";
+               " GeV^{2}, W = " + formatFloat(wMin, 2) + "-" + formatFloat(wMax, 2) + " GeV, " +
+               "cos(Theta) = (" + formatFloat(cosThetaMin, 1) + ")-(" + formatFloat(cosThetaMax, 1) + "), " +
+               "Phi = " + formatFloat(phiMinDeg, 0) + "^{o}-" + formatFloat(phiMaxDeg, 0) + "^{o}; MM, GeV";
     }
 };

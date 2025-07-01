@@ -1,66 +1,92 @@
 #pragma once
 
 #include "TFile.h"
-
 #include "baseStep.h"
 
+#include <map>
+#include <string>
+
 /**
- * @brief Абстрактный класс для шагов, работающих с ROOT-файлом.
+ * @brief Абстрактный класс для шагов, работающих с ROOT-файлами.
  * 
- * Открывает ROOT-файл, указанный как "main" во входных файлах.
- * Предоставляет доступ к открытому TFile* в производных классах.
- * Закрывает файл в деструкторе.
+ * Открывает *все* ROOT-файлы, указанные в inputFileNames (по ролям).
+ * Предоставляет доступ к каждому через map `inputFiles`.
+ * Также открывает выходной файл, если указан.
  * 
- * Используется как базовый класс для шагов, работающих с деревьями, гистограммами и т.д.
+ * Закрывает все открытые файлы в `finalize()`.
  */
 class RootStep : public BaseStep {
 public:
-    /**
-     * @param stepName Имя шага (для логирования и отладки)
-     * @param inputFileNames Карта входных файлов (ожидается наличие файла с ролью "main")
-     * @param outputFileName Имя выходного файла (опционально)
-     */
     RootStep(const std::string& stepName,
              const std::map<std::string, std::string>& inputFileNames,
              const std::string& outputFileName = "")
         : BaseStep(stepName, inputFileNames, outputFileName) {}
 
-    /// @brief Деструктор. Закрывает и освобождает входной ROOT-файл, если он был открыт.
-    /// Это освобождает все связанные ресурсы и предотвращает утечки памяти.
-    virtual ~RootStep() {
-        if (inputFile && inputFile->IsOpen()) {
-            inputFile->Close();
-            delete inputFile;
-        }
-    }
+    virtual ~RootStep() = default;
 
 protected:
-    TFile* inputFile = nullptr; ///< Указатель на входной ROOT-файл. Открывается в initialize(), закрывается в деструкторе.
+    std::map<std::string, TFile*> inputFiles;  ///< Все входные ROOT-файлы по ролям
+    TFile* inputFile = nullptr;                ///< Устаревшее имя: синоним для inputFiles["main"]
+    TFile* outputFile = nullptr;               ///< Выходной ROOT-файл (если указан)
 
-    /**
-     * @brief Метод инициализации: открывает входной файл.
-     * 
-     * @return true если инициализация прошла успешно, иначе false
-     */
     virtual bool initialize() override {
-        // Проверка наличия входного файла с ролью "main"
-        if (!hasInputFile("main")) {
-            log("No input file with role 'main'.", LogLevel::Error);
-            return false;
+        // Открываем все входные файлы
+        for (const auto& [role, filename] : inputFileNames) {
+            log("Opening ROOT input file [" + role + "]: " + filename, LogLevel::Debug);
+            TFile* file = TFile::Open(filename.c_str(), "READ");
+            if (!file || file->IsZombie()) {
+                log("Failed to open input file: " + filename + " (role: " + role + ")", LogLevel::Error);
+                return false;
+            }
+            inputFiles[role] = file;
         }
 
-        // Получение имени файла
-        const std::string& fileName = getInputFileName("main");
-
-        // Открытие ROOT-файла на чтение
-        log("Opening ROOT file: " + fileName, LogLevel::Debug);
-        inputFile = TFile::Open(fileName.c_str(), "READ");
-        if (!inputFile || inputFile->IsZombie()) {
-            log("Failed to open file: " + fileName, LogLevel::Error);
-            return false;
+        // Синоним для старого кода
+        if (inputFiles.count("main")) {
+            inputFile = inputFiles["main"];
+            log("ROOT file opened successfully: " + getInputFileName("main"), LogLevel::Info);
+        } else {
+            log("Warning: input file with role 'main' not found.", LogLevel::Warning);
         }
-        log("ROOT file opened successfully: " + fileName, LogLevel::Info);
+
+        // Открываем выходной файл, если указан
+        if (!outputFileName.empty()) {
+            outputFile = TFile::Open(outputFileName.c_str(), "RECREATE");
+            if (!outputFile || outputFile->IsZombie()) {
+                log("Failed to create output file: " + outputFileName, LogLevel::Error);
+                return false;
+            }
+            log("ROOT output file created successfully: " + outputFileName, LogLevel::Info);
+        }
 
         return true;
+    }
+
+    virtual bool finalize() override {
+        // Закрываем все входные файлы
+        for (auto& [role, file] : inputFiles) {
+            if (file && file->IsOpen()) {
+                file->Close();
+                log("Closed input file [" + role + "]", LogLevel::Debug);
+            }
+        }
+
+        inputFiles.clear();
+        inputFile = nullptr;
+
+        // Закрываем выходной файл
+        if (outputFile && outputFile->IsOpen()) {
+            outputFile->Close();
+            log("Closed output file", LogLevel::Debug);
+        }
+
+        outputFile = nullptr;
+        return true;
+    }
+
+    // Утилита для доступа
+    TFile* getInputFile(const std::string& role) const {
+        auto it = inputFiles.find(role);
+        return (it != inputFiles.end()) ? it->second : nullptr;
     }
 };
