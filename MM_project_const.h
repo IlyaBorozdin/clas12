@@ -6,10 +6,10 @@ const double W_MIN = 1.1;
 const double W_MAX = 2.0;
 
 const int NUMBER_Q2 = 4;
-const int NUMBER_W = 5; // 18;
+const int NUMBER_W = 18;
 // const int NUMBER_W = 36;
-const int NUMBER_COS_THETA = 3; // 10;
-const int NUMBER_PHI = 3; // 10;
+const int NUMBER_COS_THETA = 10;
+const int NUMBER_PHI = 10;
 
 const double STEP_W = (W_MAX - W_MIN) / NUMBER_W;
 const double STEPS_Q2[8] = { 0.4, 0.6, 0.6, 1.0, 1.0, 2.0, 2.0, 3.5 };

@@ -12,9 +12,9 @@ public:
     virtual ~RootFitAnalysisStep() = default;
 
 protected:
-    double ampGauss, meanGauss, stdDevGauss, asymGauss, ampGaussDelta, meanGaussDelta, stdDevGaussDelta, paramA, paramB, paramC, width_mm;
+    double ampGauss, meanGauss, stdDevGauss, asymGauss, ampGaussDelta, meanGaussDelta, stdDevGaussDelta, paramA, paramB, paramC;
     double eAmpGauss, eMeanGauss, eStdDevGauss, eAsymGauss, eAmpGaussDelta, eMeanGaussDelta, eStdDevGaussDelta, errA, errB, errC;
-    double downEdge, upEdge;
+    double downEdge, upEdge, width_mm, neutronIntegral, neutronValue, neutronPosition, maxValue;
     int index_q2, index_w, index_cos_theta, index_phi;
 
     virtual bool run() override {
@@ -58,6 +58,11 @@ protected:
         inputTree->SetBranchAddress("downEdge", &downEdge);
         inputTree->SetBranchAddress("upEdge", &upEdge);
         inputTree->SetBranchAddress("width_mm", &width_mm);
+        inputTree->SetBranchAddress("neutronIntegral", &neutronIntegral);
+        inputTree->SetBranchAddress("neutronValue", &neutronValue);
+        inputTree->SetBranchAddress("neutronPosition", &neutronPosition);
+        inputTree->SetBranchAddress("maxValue", &maxValue);
+
         inputTree->SetBranchAddress("index_q2", &index_q2);
         inputTree->SetBranchAddress("index_w", &index_w);
         inputTree->SetBranchAddress("index_cos_theta", &index_cos_theta);

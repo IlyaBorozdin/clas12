@@ -72,11 +72,17 @@ protected:
         delete fitFunc;
         delete subFunc;
         delete canvas;
-        delete hist;
+        // delete hist;
     }
 
     bool check() override {
         if (ampGauss < 0.0) return false;
+        if (paramA * (downEdge - paramB) * (downEdge - paramC) < 0) return false;
+        if (paramA * (upEdge - paramB) * (upEdge - paramC) < 0) return false;
+        if (paramA * (meanGauss - paramB) * (meanGauss - paramC) < 0) return false;
+        if (paramA * (meanGauss - paramB) * (meanGauss - paramC) + ampGauss > 1.2 * neutronValue) return false;
+        if (paramA * (meanGauss - paramB) * (meanGauss - paramC) + ampGauss < 0.8 * neutronValue) return false;
+        if (ampGaussDelta > 1.2 * maxValue) return false;
         return true;
     }
 

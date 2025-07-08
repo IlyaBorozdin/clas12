@@ -32,6 +32,7 @@ public:
     /**
      * @brief Удаляет все созданные TTree из памяти
      */
+    /*
     ~BinnedTreeStep() override {
         for (auto& q2vec : trees)
             for (auto& wvec : q2vec)
@@ -39,6 +40,8 @@ public:
                     for (auto* tree : ctvec)
                         delete tree;
     }
+    */
+    ~BinnedTreeStep() override = default;
 
     void describe() const override {
         RootDataAnalysisStep::describe();  // Вызываем базовую реализацию

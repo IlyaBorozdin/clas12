@@ -8,14 +8,14 @@
 #include "source/ManageClasses/rootListObjectAnalysisStep.h"
 #include "utils/histogramFitter.h"
 
-class ParamFitterStep : public RootListObjectAnalysisStep<TH1F> {
+class ParamFitterStepExt : public RootListObjectAnalysisStep<TH1F> {
 public:
-    ParamFitterStep(const std::string& stepName,
+    ParamFitterStepExt(const std::string& stepName,
                     const std::string& inputFileName,
                     const std::string& outputFileName)
         : RootListObjectAnalysisStep<TH1F>(stepName, { {"main", inputFileName} }, cellGenerator, outputFileName) {}
 
-    ~ParamFitterStep() override = default;
+    ~ParamFitterStepExt() override = default;
 
 protected:
     size_t processedHists = 0;   ///< Счётчик обработанных деревьев
@@ -43,9 +43,14 @@ protected:
         TF1* fitFunc = fitter.fit(hist, i, j, k, l);
 
         fillParams(fitFunc);
+
         downEdge = fitter.getDownEdge(i, j, k, l);
         upEdge = fitter.getUpEdge(i, j, k, l);
         width_mm = hist->GetBinWidth(1);
+        neutronIntegral = fitter.getNeutronIntegral(hist);
+        fitter.getNeutronPeak(hist, neutronPosition, neutronValue);
+        fitter.getMaxBin(hist, maxPosition, maxValue);
+
         index_q2 = i;
         index_w = j;
         index_cos_theta = k;
@@ -76,11 +81,11 @@ protected:
 
 private:
     TTree* outputTree;
-    HistogramFitter fitter;
+    HistogramFitterExt fitter;
 
-    double ampGauss, meanGauss, stdDevGauss, asymGauss, ampGaussDelta, meanGaussDelta, stdDevGaussDelta, paramA, paramB, paramC, width_mm;
+    double ampGauss, meanGauss, stdDevGauss, asymGauss, ampGaussDelta, meanGaussDelta, stdDevGaussDelta, paramA, paramB, paramC;
     double eAmpGauss, eMeanGauss, eStdDevGauss, eAsymGauss, eAmpGaussDelta, eMeanGaussDelta, eStdDevGaussDelta, errA, errB, errC;
-    double downEdge, upEdge;
+    double downEdge, upEdge, width_mm, neutronIntegral, neutronValue, neutronPosition, maxValue, maxPosition;
     int index_q2, index_w, index_cos_theta, index_phi;
 
     void setupBranches() {
@@ -108,6 +113,11 @@ private:
         outputTree->Branch("downEdge", &downEdge, "downEdge/D");
         outputTree->Branch("upEdge", &upEdge, "upEdge/D");
         outputTree->Branch("width_mm", &width_mm, "width_mm/D");
+        outputTree->Branch("neutronIntegral", &neutronIntegral, "neutronIntegral/D");
+        outputTree->Branch("neutronValue", &neutronValue, "neutronValue/D");
+        outputTree->Branch("neutronPosition", &neutronPosition, "neutronPosition/D");
+        outputTree->Branch("maxValue", &maxValue, "maxValue/D");
+
         outputTree->Branch("index_q2", &index_q2, "index_q2/I");
         outputTree->Branch("index_w", &index_w, "index_w/I");
         outputTree->Branch("index_cos_theta", &index_cos_theta, "index_cos_theta/I");
