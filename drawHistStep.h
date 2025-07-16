@@ -23,6 +23,12 @@ protected:
     size_t eventsSkipped = 0;
     size_t printEvery = 2000;   ///< Частота логирования прогресса (по умолчанию)
 
+    size_t eventsRejectedCondition4 = 0;
+    size_t eventsRejectedCondition5 = 0;
+    size_t eventsRejectedCondition6 = 0;
+    size_t eventsRejectedCondition7 = 0;
+
+
     bool initialize() override {
         if (!RootFitAnalysisStep::initialize()) {
             return false;
@@ -49,7 +55,7 @@ protected:
 
         TCanvas* canvas = new TCanvas("canvas", "Histogram", 1200, 900);
 
-        std::string strSubFunc = "[4]*(x - [5])*(x - [6])";
+        std::string strSubFunc = "TMath::Max(0., [4]*(x - [5])*(x - [6]))";
         std::string strFitFunc = "[0]*exp(-0.5*((x-[1])/[2]*(x < [1] ? [3] : 1))^2) + " + strSubFunc + " + [7]*exp(-0.5*((x-[8])/[9])^2)";
 
         TF1* fitFunc = new TF1("FitFunc", strFitFunc.c_str(), downEdge , upEdge);
@@ -66,34 +72,63 @@ protected:
 
         canvas->Update();
 
-        std::string figName = outputDirName + makeCellName(index_q2, index_w, index_cos_theta, index_phi) + ".png";
+        std::string figName = outputDirName + name + ".png";
         canvas->SaveAs(figName.c_str());
 
         delete fitFunc;
         delete subFunc;
         delete canvas;
-        // delete hist;
     }
 
     bool check() override {
-        if (ampGauss < 0.0) return false;
-        if (paramA * (downEdge - paramB) * (downEdge - paramC) < 0) return false;
-        if (paramA * (upEdge - paramB) * (upEdge - paramC) < 0) return false;
-        if (paramA * (meanGauss - paramB) * (meanGauss - paramC) < 0) return false;
-        if (paramA * (meanGauss - paramB) * (meanGauss - paramC) + ampGauss > 1.2 * neutronValue) return false;
-        if (paramA * (meanGauss - paramB) * (meanGauss - paramC) + ampGauss < 0.8 * neutronValue) return false;
-        if (ampGaussDelta > 1.2 * maxValue) return false;
-        return true;
+        bool passed = true;
+
+        double valueAtPeak = std::max(0.0, paramA * (meanGauss - paramB) * (meanGauss - paramC)) + ampGauss;
+        if (valueAtPeak > 1.25 * neutronValue) {
+            ++eventsRejectedCondition4;
+            passed = false;
+        }
+
+        if (valueAtPeak < 0.75 * neutronValue) {
+            ++eventsRejectedCondition5;
+            passed = false;
+        }
+
+        if (ampGaussDelta > 1.25 * maxValue) {
+            ++eventsRejectedCondition6;
+            passed = false;
+        }
+
+        if (ampGaussDelta < 0.0) {
+            ++eventsRejectedCondition7;
+            passed = false;
+        }
+
+        return passed;
     }
+
 
     void logProgress() override {
         ++eventsProcessed;
         if (eventsProcessed % printEvery == 0 || eventsProcessed == totalEvents) {
-            double percent = 100.0 * (eventsProcessed - eventsSkipped) / totalEvents;
-            log("Processed " + std::to_string(eventsProcessed - eventsSkipped) +
+            double percent = 100.0 * (eventsProcessed) / totalEvents;
+            log("Processed " + std::to_string(eventsProcessed) +
                 " histograms (" + std::to_string(static_cast<int>(percent)) + "%)", LogLevel::Info);
         }
     }
+
+    bool finalize() override {
+        log("Histograms drawing complete.", LogLevel::Info);
+        log("Processed histogramms: " + std::to_string(eventsProcessed), LogLevel::Info);
+        log("Skipped histogramms due to empty or bad name: " + std::to_string(eventsSkipped), LogLevel::Info);
+        log("Rejected by Condition 4 (peak value > 1.25 * neutron): " + std::to_string(eventsRejectedCondition4), LogLevel::Info);
+        log("Rejected by Condition 5 (peak value < 0.75 * neutron): " + std::to_string(eventsRejectedCondition5), LogLevel::Info);
+        log("Rejected by Condition 6 (delta peak too high): " + std::to_string(eventsRejectedCondition6), LogLevel::Info);
+        log("Rejected by Condition 7 (delta peak negative): " + std::to_string(eventsRejectedCondition7), LogLevel::Info);
+
+        return RootFitAnalysisStep::finalize();
+    }
+
 
 private:
     void setFunctionParams(TF1* fitFunc, TF1* subFunc) {

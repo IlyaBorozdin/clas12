@@ -6,13 +6,13 @@
 
 #include "MM_project_utils.h"
 #include "source/ManageClasses/rootListObjectAnalysisStep.h"
-#include "utils/histogramFitter.h"
+#include "utils/histogramFitterFlexible.h"
 
 class ParamFitterStepExt : public RootListObjectAnalysisStep<TH1F> {
 public:
     ParamFitterStepExt(const std::string& stepName,
-                    const std::string& inputFileName,
-                    const std::string& outputFileName)
+                       const std::string& inputFileName,
+                       const std::string& outputFileName)
         : RootListObjectAnalysisStep<TH1F>(stepName, { {"main", inputFileName} }, cellGenerator, outputFileName) {}
 
     ~ParamFitterStepExt() override = default;
@@ -35,7 +35,7 @@ protected:
 
     void processObject(TH1F* hist) override {
         int i, j, k, l;
-        if (!parseCellName(hist->GetName(), i, j, k, l)) {
+        if (!parseCellName(hist->GetName(), i, j, k, l) || fitter.getFitRegionEvents(hist, i, j, k, l) == 0) {
             ++skippedHists;
             return;
         }
@@ -44,10 +44,10 @@ protected:
 
         fillParams(fitFunc);
 
-        downEdge = fitter.getDownEdge(i, j, k, l);
-        upEdge = fitter.getUpEdge(i, j, k, l);
+        downEdge = fitter.getDownEdge(hist, i, j, k, l);
+        upEdge = fitter.getUpEdge(hist, i, j, k, l);
         width_mm = hist->GetBinWidth(1);
-        neutronIntegral = fitter.getNeutronIntegral(hist);
+        fitter.getNeutronIntegral(hist, neutronIntegral);
         fitter.getNeutronPeak(hist, neutronPosition, neutronValue);
         fitter.getMaxBin(hist, maxPosition, maxValue);
 
@@ -61,7 +61,9 @@ protected:
     }
 
     bool check(TH1F* hist) override {
-        return hist->GetEntries() > 0;
+        if (hist->GetEntries() > 0) return true;
+        ++skippedHists;
+        return false;
     }
 
 
@@ -76,12 +78,16 @@ protected:
         outputFile->cd();
         outputTree->Write();
 
+        log("Histograms fitting complete.", LogLevel::Info);
+        log("Processed histogramms: " + std::to_string(processedHists), LogLevel::Info);
+        log("Skipped histogramms due to empty or bad name: " + std::to_string(skippedHists), LogLevel::Info);
+
         return RootListObjectAnalysisStep<TH1F>::finalize();
     }
 
 private:
     TTree* outputTree;
-    HistogramFitterExt fitter;
+    HistogramFitterFlexible fitter;
 
     double ampGauss, meanGauss, stdDevGauss, asymGauss, ampGaussDelta, meanGaussDelta, stdDevGaussDelta, paramA, paramB, paramC;
     double eAmpGauss, eMeanGauss, eStdDevGauss, eAsymGauss, eAmpGaussDelta, eMeanGaussDelta, eStdDevGaussDelta, errA, errB, errC;

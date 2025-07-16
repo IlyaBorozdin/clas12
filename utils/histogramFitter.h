@@ -162,7 +162,7 @@ public:
             fitFunc->SetParameter(f, primaryFitFunc->GetParameter(f));
         }
 
-        if (getW(j) > W_RESOLUTION_THRESHOLD) {
+        if (isDeltaFit(i, j, k, l)) {
             // --- Подгонка с Δ-пиком (второй пик виден) ---
             fitFunc->SetParameter(7, 1.00);
             fitFunc->FixParameter(8, deltaPeak);
@@ -179,8 +179,8 @@ public:
         } else {
             // --- Δ-пик не виден: задаём значения по умолчанию ---
             fitFunc->FixParameter(7, 0.0);   // amp
-            fitFunc->FixParameter(8, 0.0);  // mean
-            fitFunc->FixParameter(9, 0.0);  // sigma
+            fitFunc->FixParameter(8, 0.0);   // mean
+            fitFunc->FixParameter(9, 0.0);   // sigma
         }
 
         delete primaryFitFunc;
@@ -189,14 +189,14 @@ public:
 
 
     double getUpEdge(int i, int j, int k, int l) const {
-        if (getW(j) > W_RESOLUTION_THRESHOLD) return interpolate(MM_UP_EDGES, j);
+        if (isDeltaFit(i, j, k, l)) return interpolate(MM_UP_EDGES, j);
         return getUpShortEdge(i, j, k, l);
     }
 
     double getUpShortEdge(int i, int j, int k, int l) const { return interpolate(MM_UP_SHORT_EDGES, j); }
 
     double getDownEdge(int i, int j, int k, int l) const { 
-        if (getW(j) > W_RESOLUTION_THRESHOLD) return 0.80;
+        if (isDeltaFit(i, j, k, l)) return 0.80;
         return getDownShortEdge(i, j, k, l);
     }
 
@@ -244,26 +244,26 @@ public:
 
 private:
     static constexpr double W_RESOLUTION_THRESHOLD = 1.35;
+    static constexpr double PHI_RESOLUTION_THRESHOLD_DOWN = 0.3 * M_PI;
+    static constexpr double PHI_RESOLUTION_THRESHOLD_UP = 0.7 * M_PI;
 
-    static constexpr double MM_UP_EDGES[36] = {
-        0.97, 0.98, 1.00, 1.02, 1.04, 1.07, 1.10, 1.10, 1.12, 1.14, 1.18, 1.23, 1.24, 1.24, 1.28, 1.30,
-        1.32, 1.34, 1.34, 1.34, 1.34, 1.34, 1.34, 1.34, 1.34, 1.34, 1.34, 1.34, 1.34, 1.34, 1.34, 1.34,
-        1.34, 1.34, 1.34, 1.34
+    static constexpr double MM_UP_EDGES[18] = {
+        0.99, 1.04, 1.06, 1.09, 1.09, 1.21, 1.25, 1.30, 1.34,
+        1.38, 1.38, 1.38, 1.38, 1.38, 1.38, 1.38, 1.38, 1.38
     };
 
-    static constexpr double MM_UP_SHORT_EDGES[36] = {
-        0.97, 0.98, 1.00, 1.02, 1.04, 1.07, 1.10, 1.10, 1.12, 1.12, 1.12, 1.10, 1.10, 1.10, 1.10, 1.10,
-        1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10,
-        1.10, 1.10, 1.10, 1.10
+    static constexpr double MM_UP_SHORT_EDGES[18] = {
+        0.99, 1.04, 1.06, 1.07, 1.07, 1.07, 1.07, 1.07, 1.08,
+        1.08, 1.08, 1.08, 1.08, 1.10, 1.10, 1.10, 1.10, 1.10
     };
 
-    static constexpr double DELTA_PEAK_POSITIONS[36] = {
-        1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.000, 1.088, 1.088, 1.134, 1.134, 1.169, 1.169, 1.201, 1.201, 
-        1.223, 1.223, 1.239, 1.239, 1.230, 1.230, 1.227, 1.227, 1.233, 1.233, 1.216, 1.216, 1.220, 1.220, 1.220, 1.220, 1.220, 1.220
+    static constexpr double DELTA_PEAK_POSITIONS[18] = {
+        1.000, 1.000, 1.000, 1.000, 1.000, 1.088, 1.134, 1.169, 1.201, 
+        1.223, 1.239, 1.230, 1.227, 1.233, 1.216, 1.220, 1.220, 1.220
     };
 
     double interpolate(const double* array, int j) const {
-        const int n = 36;
+        const int n = 18;
         double x = static_cast<double>(j) * (n - 1) / (NUMBER_W - 1);
         int i = static_cast<int>(x);
         double frac = x - i;
@@ -274,5 +274,15 @@ private:
 
     double getW(int j) const {
         return W_MIN + (j + 0.5) * (W_MAX - W_MIN) / NUMBER_W;
+    }
+
+    double getPhi(int l) const {
+        return (l + 0.5) * 2 * M_PI / NUMBER_PHI;
+    }
+
+    bool isDeltaFit(int i, int j, int k, int l) const {
+        return getW(j) > W_RESOLUTION_THRESHOLD &&
+               getPhi(l) > PHI_RESOLUTION_THRESHOLD_DOWN &&
+               getPhi(l) < PHI_RESOLUTION_THRESHOLD_UP;
     }
 };
