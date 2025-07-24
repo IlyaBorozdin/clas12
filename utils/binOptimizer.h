@@ -49,7 +49,7 @@ private:
     double paramAlpha;
 
     static constexpr double ABS_MIN = 0.80;
-    static constexpr double XMIN_CLIP = 0.70;
+    static constexpr double XMIN_CLIP = 0.65;
     static constexpr double ABS_MAX = 1.10;
     static constexpr int ENTRIES_MIN = 3;
 

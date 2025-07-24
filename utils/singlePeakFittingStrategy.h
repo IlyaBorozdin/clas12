@@ -51,7 +51,7 @@ public:
 
         // Ограничения для первой аппроксимации
         fitFunc->SetParLimits(0, 0.05 * maxValue, 1.1 * maxValue);
-        fitFunc->SetParLimits(1, 0.85, 1.05);
+        fitFunc->SetParLimits(1, 0.80, 1.05);
         fitFunc->SetParLimits(2, 0.0085, 0.085);
         fitFunc->SetParLimits(3, 0.33, 3.00);
         // fitFunc->SetParLimits(5, 0.60, 0.95);
@@ -63,7 +63,7 @@ public:
     }
 
     double getDownEdge(TH1F* hist, int i, int j, int k, int l) const override {
-        double downEdge = 0.8;
+        double downEdge = 0.80;
         double x_min = hist->GetXaxis()->GetXmin();
 
         if (downEdge < x_min) downEdge = x_min;

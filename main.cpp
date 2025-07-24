@@ -39,7 +39,7 @@ int main() {
 
     auto E = std::make_shared<DrawHistStep>(
         // "E", std::map<std::string, std::string>{ {"main", "data/fit_data.root"}, {"hist", "data/histed.root"} }, "img/graphs/"
-        "E", std::map<std::string, std::string>{ {"main", "data_0307/fitted.root"}, {"hist", "data_0307/histed.root"} }, "img/graphs_1007/"
+        "E", std::map<std::string, std::string>{ {"main", "data_0307/fitted.root"}, {"hist", "data_0307/histed.root"} }, "img/graphs_1807/"
     );
     auto I = std::make_shared<DrawHistStepDebug>(
         // "I", "data/fit_data.root", "data/cond_debug.root"
@@ -48,7 +48,7 @@ int main() {
 
     auto G = std::make_shared<DrawYieldStep>(
         // "E", std::map<std::string, std::string>{ {"main", "data/fit_data.root"}, {"hist", "data/histed.root"} }, "img/graphs/"
-        "G", "big_data/fitted.root", "img/graphs_yield_1307/"
+        "G", "data_0307/fitted.root", "img/graphs_yield_1807/"
     );
     
 
@@ -62,10 +62,12 @@ int main() {
     auto branch2 = std::make_shared<AnalysisBranch>();
     branch2->addStep(A);
     branch2->addStep(B);
+    // С этого момента изменения !!! (F и H)
     branch2->addStep(F);
     branch2->addStep(H);
     branch2->addStep(E);
-    branch2->addStep(I);
+    // branch2->addStep(I);
+    branch2->addStep(G);
 
     auto branch3 = std::make_shared<AnalysisBranch>();
     branch3->addStep(G);
@@ -77,8 +79,8 @@ int main() {
 
     manager.describe();
     // manager.runBranch("default");
-    // manager.runBranch("experimental");
-    manager.runBranch("yield builder");
+    manager.runBranch("experimental");
+    // manager.runBranch("yield builder");
 
     return 0;
 }
