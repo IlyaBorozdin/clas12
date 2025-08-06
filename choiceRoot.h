@@ -21,7 +21,13 @@ vector<string> readInputFile(const char* inputFileName);
 
 class ChoiceRoot : public HipoDataAnalysis {
 public:
-    ChoiceRoot(const char* inputFileName, const char* outFileName) : HipoDataAnalysis(readInputFile(inputFileName)), file(outFileName, "RECREATE"), tree("ExpData", "Tree with electron and pion data") {
+    ChoiceRoot(const char* inputFileName,
+               const char* outFileName,
+               bool appendMode = false,
+               const char* treeName = "ExpData")
+        : HipoDataAnalysis(readInputFile(inputFileName)),
+          file(outFileName, appendMode ? "UPDATE" : "RECREATE"),
+          tree(treeName, "Tree with electron and pion data") {
 
         vector<Cut<const DataBanks&>*> electronCuts = {
             new IsParticleNumber(),

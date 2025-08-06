@@ -47,8 +47,8 @@ protected:
         downEdge = fitter.getDownEdge(hist, i, j, k, l);
         upEdge = fitter.getUpEdge(hist, i, j, k, l);
         width_mm = hist->GetBinWidth(1);
-        fitter.getNeutronIntegral(hist, neutronIntegral);
-        fitter.getNeutronPeak(hist, neutronPosition, neutronValue);
+        fitter.getNeutronIntegral(hist, i, j, k, l, neutronIntegral);
+        fitter.getNeutronPeak(hist, i, j, k, l, neutronPosition, neutronValue);
         fitter.getMaxBin(hist, maxPosition, maxValue);
 
         index_q2 = i;

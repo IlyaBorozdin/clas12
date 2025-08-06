@@ -13,14 +13,11 @@ public:
     virtual double getUpEdge(TH1F* hist, int i, int j, int k, int l) const = 0;
     virtual double getDeltaPeak(TH1F* hist, int i, int j, int k, int l) const = 0;
     
-    void getNeutronPeak(TH1F* hist, double& maxPosition, double& maxValue) const {
-        double downEdge = 0.80;
-        double x_min = hist->GetXaxis()->GetXmin();
-
-        if (downEdge < x_min) downEdge = x_min;
+    void getNeutronPeak(TH1F* hist, int i, int j, int k, int l, double& maxPosition, double& maxValue) const {
+        double downEdge = getDownEdge(hist, i, j, k, l);
 
         int bin_min = hist->FindBin(downEdge);
-        int bin_max = hist->FindBin(1.00);
+        int bin_max = hist->FindBin(1.05);
 
         int maxBin = bin_min;
         maxValue = hist->GetBinContent(bin_min);
@@ -36,14 +33,11 @@ public:
         maxPosition = hist->GetBinCenter(maxBin);
     }
 
-    void getNeutronIntegral(TH1F* hist, double& integral) const {
-        double downEdge = 0.80;
-        double x_min = hist->GetXaxis()->GetXmin();
-
-        if (downEdge < x_min) downEdge = x_min;
+    void getNeutronIntegral(TH1F* hist, int i, int j, int k, int l, double& integral) const {
+        double downEdge = getDownEdge(hist, i, j, k, l);
 
         int bin_min = hist->FindBin(downEdge);
-        int bin_max = hist->FindBin(1.00);
+        int bin_max = hist->FindBin(1.05);
 
         integral = 0.0;
 

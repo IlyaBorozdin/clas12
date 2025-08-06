@@ -21,9 +21,13 @@ public:
      */
     HipoConversionStep(const std::string& stepName,
                           const std::string& inputFileName,
-                          const std::string& outputFileName)
-        : BaseStep(stepName, { {"hipo_list", inputFileName} }, outputFileName),
-          choice(nullptr) {}
+                          const std::string& outputFileName,
+                          bool appendMode = false,
+                          const std::string& treeName = "ExpData")
+        : BaseStep(stepName, { {"hipo_list", inputFileName} }, outputFileName, appendMode),
+          choice(nullptr),
+          appendMode(appendMode),
+          treeName(treeName) {}
 
     ~HipoConversionStep() override {
         delete choice;
@@ -47,7 +51,7 @@ protected:
         const std::string& output = getOutputFileName();
 
         log("Creating ChoiceRoot with input: " + hipoFileList + ", output: " + output, LogLevel::Debug);
-        choice = new ChoiceRoot(hipoFileList.c_str(), output.c_str());
+        choice = new ChoiceRoot(hipoFileList.c_str(), output.c_str(), appendMode, treeName.c_str());
 
         return true;
     }
@@ -66,4 +70,7 @@ protected:
 
 private:
     ChoiceRoot* choice;
+
+    bool appendMode;
+    std::string treeName;
 };

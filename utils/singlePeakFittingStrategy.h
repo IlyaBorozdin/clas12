@@ -12,7 +12,7 @@ public:
         double downEdge = getDownEdge(hist, i, j, k, l);
 
         double maxPosition, maxValue;
-        getNeutronPeak(hist, maxPosition, maxValue);
+        getNeutronPeak(hist, i, j, k, l, maxPosition, maxValue);
 
         TF1* fitFunc = new TF1("Single Peak Fit Function", strFitFunc.c_str(), downEdge, upEdge);
 
@@ -51,7 +51,7 @@ public:
 
         // Ограничения для первой аппроксимации
         fitFunc->SetParLimits(0, 0.05 * maxValue, 1.1 * maxValue);
-        fitFunc->SetParLimits(1, 0.80, 1.05);
+        fitFunc->SetParLimits(1, downEdge, 1.05);
         fitFunc->SetParLimits(2, 0.0085, 0.085);
         fitFunc->SetParLimits(3, 0.33, 3.00);
         // fitFunc->SetParLimits(5, 0.60, 0.95);
@@ -64,6 +64,19 @@ public:
 
     double getDownEdge(TH1F* hist, int i, int j, int k, int l) const override {
         double downEdge = 0.80;
+
+        ++i; ++j; ++k; ++l;
+        if ((j == 1 && k == 7 && (l <= 3 || l >= 8)) ||
+            (j == 4 && k == 8 && l == 6)) { downEdge = 0.75; }
+        else if ((j == 1 && (k >= 6 && k <= 7) && (l >= 4 && l <= 7)) ||
+                 (j == 2 && k == 8) ||
+                 (j == 3 && k == 8 && (l >= 4 && l <= 7)) ||
+                 (j == 4 && k == 8 && l == 5) ||
+                 (j == 4 && k == 9)) { downEdge = 0.70; }
+        else if ((j == 1 && (k >= 8 && k <= 10)) ||
+                 ((j >= 2 && j <= 3) && (k >= 0 && k <= 10)) || // В тетради при k >= 8 !!!
+                 ((j >= 4 && j <= 5) && k == 10)) { downEdge = 0.65; }
+
         double x_min = hist->GetXaxis()->GetXmin();
 
         if (downEdge < x_min) downEdge = x_min;

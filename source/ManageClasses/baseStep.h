@@ -51,10 +51,13 @@ public:
      */
     BaseStep(const std::string& stepName,
              const std::map<std::string, std::string>& inputFileNames = {},
-             const std::string& outputFileName = "")
+             const std::string& outputFileName = "",
+             bool forceExecution = false)
         : stepName(stepName),
-          inputFileNames(inputFileNames),
-          outputFileName(outputFileName) {}
+        inputFileNames(inputFileNames),
+        outputFileName(outputFileName),
+        forceExecution(forceExecution) {}
+
 
     virtual ~BaseStep() = default;
 
@@ -65,7 +68,7 @@ public:
 
     /// Проверяет, существует ли выходной файл (т.е. шаг уже выполнен)
     virtual bool isDone() const {
-        return outputFileExists();
+        return !forceExecution && outputFileExists();
     }
 
     const std::string& getStepName() const { return stepName; }
@@ -212,6 +215,8 @@ protected:
 
 
 private:
+    bool forceExecution = false;
+
     /// Проверка существования выходного файла
     bool outputFileExists() const {
         if (outputFileName.empty()) {

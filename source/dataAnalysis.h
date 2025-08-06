@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <filesystem>
 // #include <vector>
 // #include <functional>
 
@@ -24,6 +25,11 @@ public:
 
     void analysisCycle() {
         for (const string& dataFileName : dataFileNames) {
+
+            if (!std::filesystem::exists(dataFileName)) {
+                std::cerr << "Файл не найден: " << dataFileName << std::endl;
+                continue;
+            }
 
             hipo::reader reader;
             reader.open(dataFileName.c_str());

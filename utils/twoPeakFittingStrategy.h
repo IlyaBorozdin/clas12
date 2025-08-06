@@ -47,7 +47,7 @@ public:
         double deltaPeak = getDeltaPeak(hist, i, j, k, l);
 
         double maxPosition, maxValue;
-        getNeutronPeak(hist, maxPosition, maxValue);
+        getNeutronPeak(hist, i, j, k, l, maxPosition, maxValue);
 
         TF1* fitFunc = new TF1("Two Peak Fit Function", strFitFunc.c_str(), downEdge, upEdge);
 

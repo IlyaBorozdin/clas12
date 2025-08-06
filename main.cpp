@@ -15,6 +15,9 @@ int main() {
         // "A", "iv/pass2.txt", "data/output.root"
         "A", "pass2.txt", "output.root"
     );
+    auto J = std::make_shared<HipoConversionStep>(
+        "J", "pass3.txt", "outputSim.root", true
+    );
 
     auto B = std::make_shared<BinnedTreeStep>(
         // "B", "data/output.root", "data/binned.root"
@@ -72,15 +75,20 @@ int main() {
     auto branch3 = std::make_shared<AnalysisBranch>();
     branch3->addStep(G);
 
+    auto branch4 = std::make_shared<AnalysisBranch>();
+    branch4->addStep(J);
+
     AnalysisManager manager;
     manager.addBranch("default", branch1);
     manager.addBranch("experimental", branch2);
     manager.addBranch("yield builder", branch3);
+    manager.addBranch("output simulation", branch4);
 
     manager.describe();
     // manager.runBranch("default");
-    manager.runBranch("experimental");
+    // manager.runBranch("experimental");
     // manager.runBranch("yield builder");
+    manager.runBranch("output simulation");
 
     return 0;
 }

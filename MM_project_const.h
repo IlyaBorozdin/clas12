@@ -16,6 +16,9 @@ const double STEPS_Q2[8] = { 0.4, 0.6, 0.6, 1.0, 1.0, 2.0, 2.0, 3.5 };
 const double STEP_COS_THETA = 2.0 / NUMBER_COS_THETA;
 const double STEP_PHI = 2 * M_PI / NUMBER_PHI;
 
+const int OUTPUT_ENTRIES = 79948394;
+const int OUTPUT_SIM_ENTRIES = 0;
+
 /**
  * Необходимо использовать нефиксированные границы
 */
