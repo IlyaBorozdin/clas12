@@ -1,8 +1,6 @@
 #include "hipoConversionStep.h"
 #include "binnedTreeStep.h"
-#include "histBuilderStep.h"
 #include "histBuildefStepContrast.h"
-#include "paramFitterStep.h"
 #include "paramFitterStepExternal.h"
 #include "drawHistStep.h"
 #include "drawHistStepDebug.h"
@@ -21,46 +19,40 @@ int main() {
 
     auto B = std::make_shared<BinnedTreeStep>(
         // "B", "data/output.root", "data/binned.root"
-        "B", "output.root", "data_0307/binned.root"
+        "B", "output.root", "data_0808/binned.root"
+    );
+    auto B_home = std::make_shared<BinnedTreeStep>(
+        // "B", "data/output.root", "data/binned.root"
+        "B", "big_data/output.root", "big_data/binned_home.root"
     );
 
-    auto C = std::make_shared<HistBuilderStep>(
-        "C", "data/binned.root", "data/histed.root"
-    );
     auto F = std::make_shared<HistBuilderStepContrast>(
         // "F", "data/binned.root", "data/histed.root"
-        "F", "data_0307/binned.root", "data_0307/histed.root"
+        "F", "data_0808/binned.root", "data_0808/histed.root"
+    );
+    auto F_home = std::make_shared<HistBuilderStepContrast>(
+        // "F", "data/binned.root", "data/histed.root"
+        "F", "big_data/binned.root", "big_data/histed_home.root"
     );
 
-    auto D = std::make_shared<ParamFitterStep>(
-        "D", "data/histed.root", "data/fit_data.root"
-    );
     auto H = std::make_shared<ParamFitterStepExt>(
         // "H", "data/histed.root", "data/fit_data.root"
-        "H", "data_0307/histed.root", "data_0307/fitted.root"
+        "H", "data_0808/histed.root", "data_0808/fitted.root"
     );
 
     auto E = std::make_shared<DrawHistStep>(
         // "E", std::map<std::string, std::string>{ {"main", "data/fit_data.root"}, {"hist", "data/histed.root"} }, "img/graphs/"
-        "E", std::map<std::string, std::string>{ {"main", "data_0307/fitted.root"}, {"hist", "data_0307/histed.root"} }, "img/graphs_1807/"
+        "E", std::map<std::string, std::string>{ {"main", "data_0808/fitted.root"}, {"hist", "data_0808/histed.root"} }, "img/graphs_0808/"
     );
     auto I = std::make_shared<DrawHistStepDebug>(
         // "I", "data/fit_data.root", "data/cond_debug.root"
-        "I", "data_0307/fitted.root", "data_0307/cond_debug.root"
+        "I", "data_0808/fitted.root", "data_0808/cond_debug.root"
     );
 
     auto G = std::make_shared<DrawYieldStep>(
         // "E", std::map<std::string, std::string>{ {"main", "data/fit_data.root"}, {"hist", "data/histed.root"} }, "img/graphs/"
-        "G", "data_0307/fitted.root", "img/graphs_yield_1807/"
+        "G", "data_0808/fitted.root", "img/graphs_yield_0808/"
     );
-    
-
-    auto branch1 = std::make_shared<AnalysisBranch>();
-    branch1->addStep(A);
-    branch1->addStep(B);
-    branch1->addStep(C);
-    branch1->addStep(D);
-    branch1->addStep(E);
 
     auto branch2 = std::make_shared<AnalysisBranch>();
     branch2->addStep(A);
@@ -78,17 +70,20 @@ int main() {
     auto branch4 = std::make_shared<AnalysisBranch>();
     branch4->addStep(J);
 
+    auto branch5 = std::make_shared<AnalysisBranch>();
+    branch5->addStep(F_home);
+
     AnalysisManager manager;
-    manager.addBranch("default", branch1);
     manager.addBranch("experimental", branch2);
     manager.addBranch("yield builder", branch3);
     manager.addBranch("output simulation", branch4);
+    manager.addBranch("home", branch5);
 
     manager.describe();
-    // manager.runBranch("default");
-    // manager.runBranch("experimental");
+    manager.runBranch("experimental");
     // manager.runBranch("yield builder");
-    manager.runBranch("output simulation");
+    // manager.runBranch("output simulation");
+    // manager.runBranch("home");
 
     return 0;
 }

@@ -52,7 +52,8 @@ private:
     */
 
     bool isSiglePeakMode(int i, int j, int k, int l) const {
-        ++i; ++j; ++k; ++l;
+        convertVariableToNormal(i, j, k, l);
+
         if (j >= 1 && j <= 5) return true;
         if (j >= 6 && j <= 10 && l >= 4 && l <= 7) return true;
         if (j >= 11 && j <= 12 && l >= 5 && l <= 6) return true;
@@ -60,10 +61,11 @@ private:
     }
 
     bool isTwoPeakMode(int i, int j, int k, int l) const {
-        ++i; ++j; ++k; ++l;
+        convertVariableToNormal(i, j, k, l);
+
         if (j >= 6 && j <= 10 && (l <= 3 || l >= 8)) return true;
         if (j >= 11 && j <= 12 && (l <= 4 || l >= 7)) return true;
-        if (j >= 13 && j <= 18) return true;
+        if (j >= 13 && j <= 22) return true;
         return false;
     }
 

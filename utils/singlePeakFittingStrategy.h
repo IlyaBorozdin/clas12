@@ -65,7 +65,8 @@ public:
     double getDownEdge(TH1F* hist, int i, int j, int k, int l) const override {
         double downEdge = 0.80;
 
-        ++i; ++j; ++k; ++l;
+        convertVariableToNormal(i, j, k, l);
+
         if ((j == 1 && k == 7 && (l <= 3 || l >= 8)) ||
             (j == 4 && k == 8 && l == 6)) { downEdge = 0.75; }
         else if ((j == 1 && (k >= 6 && k <= 7) && (l >= 4 && l <= 7)) ||
@@ -74,7 +75,7 @@ public:
                  (j == 4 && k == 8 && l == 5) ||
                  (j == 4 && k == 9)) { downEdge = 0.70; }
         else if ((j == 1 && (k >= 8 && k <= 10)) ||
-                 ((j >= 2 && j <= 3) && (k >= 0 && k <= 10)) || // В тетради при k >= 8 !!!
+                 ((j >= 2 && j <= 3) && (k >= 8 && k <= 10)) || // В тетради при k >= 8 !!!
                  ((j >= 4 && j <= 5) && k == 10)) { downEdge = 0.65; }
 
         double x_min = hist->GetXaxis()->GetXmin();
@@ -84,7 +85,7 @@ public:
     }
 
     double getUpEdge(TH1F* hist, int i, int j, int k, int l) const override {
-        double upEdge = MM_UP_SHORT_EDGES[j * 18 / NUMBER_W];
+        double upEdge = MM_UP_SHORT_EDGES[j];
         double x_max = hist->GetXaxis()->GetXmax();
 
         if (upEdge > x_max) upEdge = x_max;
@@ -96,13 +97,14 @@ public:
     }
 
 private:
-    static constexpr double MM_UP_SHORT_EDGES[18] = {
+    static constexpr double MM_UP_SHORT_EDGES[22] = {
         0.99, 1.04, 1.06, 1.07, 1.07, 1.07, 1.07, 1.07, 1.08,
-        1.08, 1.08, 1.08, 1.08, 1.10, 1.10, 1.10, 1.10, 1.10
+        1.08, 1.08, 1.08, 1.08, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10, 1.10
     };
 
     bool isEmptyBack(int i, int j, int k, int l) const {
-        ++i; ++j; ++k; ++l;
+        convertVariableToNormal(i, j, k, l);
+
         if (j >= 1 && j <= 3) return true;
         if (j >= 4 && j <= 5 && k >= 1 && k <= 7 && l >= 4 && l <= 7) return true;
         if (j == 4 && j <= 5 && k >= 8 && k <= 10) return true;
@@ -110,7 +112,8 @@ private:
     }
 
     void getZerosParabola(int i, int j, int k, int l, double& x1, double& x2) const {
-        ++i; ++j; ++k; ++l;
+        convertVariableToNormal(i, j, k, l);
+
         if (j == 4 && k >= 1 && k <= 5 && (l <= 3 || l >= 8)) { x1 = 0.86; x2 = 1.10; }
         else if (j == 4 && k == 6 && (l <= 3 || l >= 8)) { x1 = 0.88; x2 = 1.08; }
         else if (j == 4 && k == 7 && (l <= 3 || l >= 8)) { x1 = 0.88; x2 = 1.06; }

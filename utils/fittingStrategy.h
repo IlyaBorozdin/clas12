@@ -96,4 +96,8 @@ public:
         if (dx <= 0.0) return 0.0;
         return -4.0 * meanHeight / (dx * dx);
     }
+
+    void convertVariableToNormal(int& i, int& j, int& k, int& l) const {
+        ++i; ++j; ++k; ++l;
+    }
 };

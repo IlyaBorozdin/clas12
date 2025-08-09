@@ -16,9 +16,15 @@ public:
     }
 
     int findOptimalBinCount() {
-        auto lower = std::lower_bound(sortedData.begin(), sortedData.end(), xMin);
-        auto upper = std::upper_bound(sortedData.begin(), sortedData.end(), xMax);
-        std::vector<double> filtered(lower, upper);
+        std::vector<double> filtered;
+
+        std::copy_if(
+            sortedData.begin(), sortedData.end(),
+            std::back_inserter(filtered),
+            [this](double x) {
+                return x >= this->xMin && x <= this->xMax;
+            }
+        );
 
         int bestBins = getMinBins();
         double bestScore = std::numeric_limits<double>::infinity();
@@ -50,25 +56,35 @@ private:
 
     static constexpr double ABS_MIN = 0.80;
     static constexpr double XMIN_CLIP = 0.65;
+
     static constexpr double ABS_MAX = 1.10;
-    static constexpr int ENTRIES_MIN = 3;
+    static constexpr double XMAX_CLIP = 1.80;
+    // static constexpr int ENTRIES_MIN = 3;
 
     int getMinBins() const { return 5; }
     int getMaxBins() const { return std::max(static_cast<int>(2 * std::sqrt(2 * nEntries)), getMinBins()); }
 
     void estimateRange() {
+        /*
         if (nEntries < ENTRIES_MIN) {
             xMin = ABS_MIN;
             xMax = ABS_MAX;
 
             return;
         }
+        */
 
-        size_t lowIndex  = static_cast<size_t>(std::ceil(0.050 * nEntries));
-        size_t highIndex = static_cast<size_t>(std::floor(0.950 * nEntries));
+        // size_t lowIndex  = static_cast<size_t>(std::ceil(0.050 * nEntries));
+        // size_t highIndex = static_cast<size_t>(std::floor(0.950 * nEntries));
 
-        xMin = std::max(std::min(ABS_MIN, sortedData[lowIndex]), XMIN_CLIP);
-        xMax = std::max(ABS_MAX, sortedData[highIndex]);
+        if (nEntries == 0) {
+            xMin = ABS_MIN;
+            xMax = ABS_MAX;
+            return;
+        }
+
+        xMin = std::max(std::min(ABS_MIN, sortedData.front()), XMIN_CLIP);
+        xMax = std::max(ABS_MAX, std::min(XMAX_CLIP, sortedData.back()));
     }
 
     double evaluateObjective(const std::vector<double>& data, int binCount) {
