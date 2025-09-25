@@ -94,6 +94,7 @@ protected:
             passed = false;
         }
 
+        /*
         if (ampGaussDelta > 1.25 * maxValue) {
             ++eventsRejectedCondition6;
             passed = false;
@@ -103,6 +104,7 @@ protected:
             ++eventsRejectedCondition7;
             passed = false;
         }
+        */
 
         return passed;
     }

@@ -104,11 +104,61 @@ public:
         file.Close();
     }
 
-private:
+protected:
     TFile file;
     TTree tree;
 
     double e_px, e_py, e_pz, pi_px, pi_py, pi_pz;
+};
+
+class ChoiceRootLund : public ChoiceRoot {
+public:
+    ChoiceRootLund(const char* inputFileName,
+                   const char* outFileName,
+                   bool appendMode = false,
+                   const char* treeName = "ExpData")
+        : ChoiceRoot(inputFileName, outFileName, appendMode, treeName) {
+            tree.Branch("n_px", &n_px, "n_px/D");
+            tree.Branch("n_py", &n_py, "n_py/D");
+            tree.Branch("n_pz", &n_px, "n_pz/D");
+            tree.Branch("g_px", &g_px, "g_px/D");
+            tree.Branch("g_py", &g_py, "g_py/D");
+            tree.Branch("g_pz", &g_pz, "g_pz/D");
+        }
+    void analysisEvent(const DataBanks& banks) override {
+            const hipo::bank* PART = &banks.LUND;
+
+            for (int i = 0; i < PART->getRows(); i++) {
+                switch (PART->getInt("pid", i))
+                {
+                case ELECTRON:
+                    e_px = PART->getFloat("px", i);
+                    e_py = PART->getFloat("py", i);
+                    e_pz = PART->getFloat("pz", i);
+                    break;
+                case PI_PLUS:
+                    pi_px = PART->getFloat("px", i);
+                    pi_py = PART->getFloat("py", i);
+                    pi_pz = PART->getFloat("pz", i);
+                    break;
+                case NEUTRON:
+                    n_px = PART->getFloat("px", i);
+                    n_py = PART->getFloat("py", i);
+                    n_pz = PART->getFloat("pz", i);
+                case PHOTON:
+                    g_px = PART->getFloat("px", i);
+                    g_py = PART->getFloat("py", i);
+                    g_pz = PART->getFloat("pz", i);
+                default:
+                    break;
+                }
+            }
+
+            tree.Fill();
+        }
+
+protected:
+    double n_px, n_py, n_pz, g_px, g_py, g_pz;
 };
 
 vector<string> readInputFile(const char* inputFileName) {

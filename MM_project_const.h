@@ -19,4 +19,5 @@ const double STEP_COS_THETA = 2.0 / NUMBER_COS_THETA;
 const double STEP_PHI = 2 * M_PI / NUMBER_PHI;
 
 const int OUTPUT_ENTRIES = 79948394;
+const int OUTPUTSIM_ENTRIES = 127892640;
 const int OUTPUT_SIM_ENTRIES = 0;

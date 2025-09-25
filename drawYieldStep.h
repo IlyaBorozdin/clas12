@@ -99,6 +99,7 @@ protected:
             passed = false;
         }
 
+        /*
         if (ampGaussDelta > 1.25 * maxValue) {
             passed = false;
         }
@@ -106,6 +107,7 @@ protected:
         if (ampGaussDelta < 0.0) {
             passed = false;
         }
+        */
 
         return passed;
     }
@@ -134,23 +136,4 @@ protected:
 
         return RootFitAnalysisStep::finalize();
     }
-
-    std::string generateTitleForYieldPlot(int iq2, int iw, int ict) const {
-        // Границы по Q²
-        double q2Min = STEPS_Q2[2 * iq2];
-        double q2Max = STEPS_Q2[2 * iq2 + 1];
-
-        // Границы по W
-        double wMin = W_MIN + STEP_W * iw;
-        double wMax = W_MIN + STEP_W * (iw + 1);
-
-        // Границы по cos(θ)
-        double cosThetaMin = -1.0 + STEP_COS_THETA * ict;
-        double cosThetaMax = -1.0 + STEP_COS_THETA * (ict + 1);
-
-        return "Yield vs #phi: Q^{2} = " + formatFloat(q2Min, 1) + "-" + formatFloat(q2Max, 1) +
-            " GeV^{2}, W = " + formatFloat(wMin, 2) + "-" + formatFloat(wMax, 2) + " GeV, " +
-            "cos(#theta) = " + formatFloat(cosThetaMin, 1) + " to " + formatFloat(cosThetaMax, 1) + "; #phi, rad; Yield";
-    }
-
 };

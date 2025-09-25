@@ -12,14 +12,15 @@
  * Входной файл — текстовый список путей к HIPO-файлам ("hipo_list").
  * Выходной файл — ROOT-файл с результатами (`TTree`), создаваемый ChoiceRoot.
  */
-class HipoConversionStep : public BaseStep {
+template <typename ChoiceType>
+class HipoConversionStepT : public BaseStep {
 public:
     /**
      * @param stepName имя шага (для логирования)
      * @param inputFileName имя входного TXT-файла
      * @param outputFileName имя выходного ROOT-файла
      */
-    HipoConversionStep(const std::string& stepName,
+    HipoConversionStepT(const std::string& stepName,
                           const std::string& inputFileName,
                           const std::string& outputFileName,
                           bool appendMode = false,
@@ -29,7 +30,7 @@ public:
           appendMode(appendMode),
           treeName(treeName) {}
 
-    ~HipoConversionStep() override {
+    ~HipoConversionStepT() override {
         delete choice;
     }
 
@@ -51,7 +52,7 @@ protected:
         const std::string& output = getOutputFileName();
 
         log("Creating ChoiceRoot with input: " + hipoFileList + ", output: " + output, LogLevel::Debug);
-        choice = new ChoiceRoot(hipoFileList.c_str(), output.c_str(), appendMode, treeName.c_str());
+        choice = new ChoiceType(hipoFileList.c_str(), output.c_str(), appendMode, treeName.c_str());
 
         return true;
     }
@@ -69,8 +70,11 @@ protected:
     }
 
 private:
-    ChoiceRoot* choice;
+    ChoiceType* choice;
 
     bool appendMode;
     std::string treeName;
 };
+
+using HipoConversionStep = HipoConversionStepT<ChoiceRoot>;
+using HipoConversionLundStep = HipoConversionStepT<ChoiceRootLund>;
