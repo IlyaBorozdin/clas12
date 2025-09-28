@@ -5,24 +5,43 @@
 #include <algorithm>
 #include <limits>
 
+struct WeightedValue {
+    double value;
+    double weight;
+
+    WeightedValue(double v = 0.0, double w = 1.0)
+        : value(v), weight(w) {}
+};
+
 class BinOptimizer {
 public:
+    // Старый интерфейс: массив значений без весов
     BinOptimizer(const std::vector<double>& data, double mu = 1.0, double alpha = 1.0)
-        : rawData(data), nEntries(data.size()),
-          paramMu(mu), paramAlpha(alpha) {
+        : nEntries(data.size()), paramMu(mu), paramAlpha(alpha) {
+        rawData.reserve(data.size());
+        for (double v : data) {
+            rawData.emplace_back(v, 1.0); // все веса = 1
+        }
         sortedData = rawData;
-        std::sort(sortedData.begin(), sortedData.end());
+        sortData();
+        estimateRange();
+    }
+
+    // Новый интерфейс: массив WeightedValue
+    BinOptimizer(const std::vector<WeightedValue>& data, double mu = 1.0, double alpha = 1.0)
+        : rawData(data), sortedData(data), nEntries(data.size()), paramMu(mu), paramAlpha(alpha) {
+        sortData();
         estimateRange();
     }
 
     int findOptimalBinCount() {
-        std::vector<double> filtered;
+        std::vector<WeightedValue> filtered;
 
         std::copy_if(
             sortedData.begin(), sortedData.end(),
             std::back_inserter(filtered),
-            [this](double x) {
-                return x >= this->xMin && x <= this->xMax;
+            [this](const WeightedValue& wv) {
+                return wv.value >= this->xMin && wv.value <= this->xMax;
             }
         );
 
@@ -44,8 +63,8 @@ public:
     double getXMax() const { return xMax; }
 
 private:
-    const std::vector<double>& rawData;
-    std::vector<double> sortedData;
+    std::vector<WeightedValue> rawData;
+    std::vector<WeightedValue> sortedData;
     size_t nEntries;
 
     double xMin;
@@ -59,61 +78,51 @@ private:
 
     static constexpr double ABS_MAX = 1.10;
     static constexpr double XMAX_CLIP = 1.80;
-    // static constexpr int ENTRIES_MIN = 3;
 
     int getMinBins() const { return 5; }
     int getMaxBins() const { return std::max(static_cast<int>(2 * std::sqrt(2 * nEntries)), getMinBins()); }
 
+    void sortData() {
+        std::sort(sortedData.begin(), sortedData.end(),
+                  [](const WeightedValue& a, const WeightedValue& b) {
+                      return a.value < b.value;
+                  });
+    }
+
     void estimateRange() {
-        /*
-        if (nEntries < ENTRIES_MIN) {
-            xMin = ABS_MIN;
-            xMax = ABS_MAX;
-
-            return;
-        }
-        */
-
-        // size_t lowIndex  = static_cast<size_t>(std::ceil(0.050 * nEntries));
-        // size_t highIndex = static_cast<size_t>(std::floor(0.950 * nEntries));
-
         if (nEntries == 0) {
             xMin = ABS_MIN;
             xMax = ABS_MAX;
             return;
         }
 
-        xMin = std::max(std::min(ABS_MIN, sortedData.front()), XMIN_CLIP);
-        xMax = std::max(ABS_MAX, std::min(XMAX_CLIP, sortedData.back()));
+        xMin = std::max(std::min(ABS_MIN, sortedData.front().value), XMIN_CLIP);
+        xMax = std::max(ABS_MAX, std::min(XMAX_CLIP, sortedData.back().value));
     }
 
-    double evaluateObjective(const std::vector<double>& data, int binCount) {
-        std::vector<int> counts(binCount, 0);
+    double evaluateObjective(const std::vector<WeightedValue>& data, int binCount) {
+        std::vector<double> binWeights(binCount, 0.0);
         double binWidth = (xMax - xMin) / binCount;
 
         size_t i = 0;
-        double binLeft = xMin;
-        double binRight = xMin + binWidth;
         int binIndex = 0;
+        double binRight = xMin + binWidth;
 
         while (i < data.size() && binIndex < binCount) {
-            int count = 0;
-            while (i < data.size() && data[i] < binRight) {
-                ++count;
+            while (i < data.size() && data[i].value < binRight) {
+                binWeights[binIndex] += data[i].weight; // добавляем вес
                 ++i;
             }
-            counts[binIndex] = count;
             ++binIndex;
-            binLeft = binRight;
             binRight += binWidth;
         }
 
-        double contrast = computeContrast(counts);
+        double contrast = computeContrast(binWeights);
         double penalty = binPenalty(binCount);
         return contrast + penalty;
     }
 
-    double computeContrast(const std::vector<int>& h) {
+    double computeContrast(const std::vector<double>& h) {
         double totalContrast = 0.0;
 
         for (size_t i = 1; i + 1 < h.size(); ++i) {
@@ -126,14 +135,15 @@ private:
             }
         }
 
-        if (h[0] >= h[1] && h[0] > 0) {
-            double ci = (h[0] - 0.5 * h[1]) / h[0];
-            totalContrast += ci;
-        }
-
-        if (h[h.size() - 1] >= h[h.size() - 2] && h[h.size() - 1] > 0) {
-            double ci = (h[h.size() - 1] - 0.5 * h[h.size() - 2]) / h[h.size() - 1];
-            totalContrast += ci;
+        if (h.size() >= 2) {
+            if (h[0] >= h[1] && h[0] > 0) {
+                double ci = (h[0] - 0.5 * h[1]) / h[0];
+                totalContrast += ci;
+            }
+            if (h[h.size() - 1] >= h[h.size() - 2] && h[h.size() - 1] > 0) {
+                double ci = (h[h.size() - 1] - 0.5 * h[h.size() - 2]) / h[h.size() - 1];
+                totalContrast += ci;
+            }
         }
 
         return totalContrast;

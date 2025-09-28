@@ -29,8 +29,9 @@ public:
 
 protected:
     // --- Переменные, связанные с ветками входного дерева (Input TTree) ---
-    double e_px = 0, e_py = 0, e_pz = 0;     ///< Компоненты импульса электрона
-    double pi_px = 0, pi_py = 0, pi_pz = 0;  ///< Компоненты импульса пиона
+    double e_px = 0.0, e_py = 0.0, e_pz = 0.0;     ///< Компоненты импульса электрона
+    double pi_px = 0.0, pi_py = 0.0, pi_pz = 0.0;  ///< Компоненты импульса пиона
+    double weight = 1.0;
 
 
     /**
@@ -73,6 +74,12 @@ protected:
         inputTree->SetBranchAddress("pi_px", &pi_px);
         inputTree->SetBranchAddress("pi_py", &pi_py);
         inputTree->SetBranchAddress("pi_pz", &pi_pz);
+
+        if (inputTree->GetBranch("weight")) {
+            inputTree->SetBranchAddress("weight", &weight);
+        } else {
+            weight = 1.0;
+        }
     }
 
     /**

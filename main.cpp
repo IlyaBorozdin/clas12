@@ -2,143 +2,171 @@
 #include "binnedTreeStep.h"
 #include "histBuildefStepContrast.h"
 #include "paramFitterStepExternal.h"
+
 #include "drawHistStep.h"
 #include "drawHistStepDebug.h"
 #include "drawYieldStep.h"
-#include "mergeCyclesStep.h"
 #include "drawYieldSaplStep.h"
+
+#include "mergeCyclesStep.h"
 #include "source/ManageClasses/analysisManager.h"
 
+//------------------------------------------------------------
+// Основная конфигурация анализа
+//------------------------------------------------------------
 int main() {
 
-    auto A = std::make_shared<HipoConversionStep>(
-        // "A", "iv/pass2.txt", "data/output.root"
-        "A", "pass2.txt", "output.root"
-    );
-    auto J = std::make_shared<HipoConversionStep>(
-        "J", "pass3.txt", "outputSim.root", true
-    );
-
-    auto B = std::make_shared<BinnedTreeStep>(
-        // "B", "data/output.root", "data/binned.root"
-        "B", "output.root", "data_0808/binned.root"
-    );
-    auto B_home = std::make_shared<BinnedTreeStep>(
-        // "B", "data/output.root", "data/binned.root"
-        "B", "big_data/output.root", "big_data/binned_home.root"
+    //--------------------------------------------------------
+    // === Экспериментальные данные ===
+    //--------------------------------------------------------
+    auto stepConvertExp = std::make_shared<HipoConversionStep>(
+        "convert_exp", "pass2.txt", "/volatile/clas12/borozdin/heavy_data/output.root"
     );
 
-    auto F = std::make_shared<HistBuilderStepContrast>(
-        // "F", "data/binned.root", "data/histed.root"
-        "F", "data_0808/binned.root", "data_0808/histed.root"
-    );
-    auto F_home = std::make_shared<HistBuilderStepContrast>(
-        // "F", "data/binned.root", "data/histed.root"
-        "F", "big_data/binned.root", "big_data/histed_home.root"
+    auto stepBinExp = std::make_shared<BinnedTreeStep>(
+        "bin_exp", "/volatile/clas12/borozdin/heavy_data/output.root", "/volatile/clas12/borozdin/heavy_data/binned.root"
     );
 
-    auto H = std::make_shared<ParamFitterStepExt>(
-        // "H", "data/histed.root", "data/fit_data.root"
-        "H", "data_0808/histed.root", "data_0808/fitted.root"
+    auto stepHistExp = std::make_shared<HistBuilderStepContrast>(
+        "hist_exp", "/volatile/clas12/borozdin/heavy_data/binned.root", "data_0808/histed.root"
     );
 
-    auto E = std::make_shared<DrawHistStep>(
-        // "E", std::map<std::string, std::string>{ {"main", "data/fit_data.root"}, {"hist", "data/histed.root"} }, "img/graphs/"
-        "E", std::map<std::string, std::string>{ {"main", "data_0808/fitted.root"}, {"hist", "data_0808/histed.root"} }, "img/graphs_0808/"
-    );
-    auto I = std::make_shared<DrawHistStepDebug>(
-        // "I", "data/fit_data.root", "data/cond_debug.root"
-        "I", "data_0808/fitted.root", "data_0808/cond_debug.root"
+    auto stepFitExp = std::make_shared<ParamFitterStepExt>(
+        "fit_exp", "data_0808/histed.root", "data_0808/fitted.root"
     );
 
-    auto G = std::make_shared<DrawYieldStep>(
-        // "E", std::map<std::string, std::string>{ {"main", "data/fit_data.root"}, {"hist", "data/histed.root"} }, "img/graphs/"
-        "G", "data_0808/fitted.root", "img/graphs_yield_0808/"
+    auto stepDrawHists = std::make_shared<DrawHistStep>(
+        "draw_hists",
+        std::map<std::string, std::string>{
+            {"main", "data_0808/fitted.root"},
+            {"hist", "data_0808/histed.root"}
+        },
+        "img/graphs_0808/"
     );
 
-    auto A_SIM = std::make_shared<MergeCyclesStep>(
-        "A_SIM", "big_data/outputSim.root", "big_data/outputSimMerged.root"
+    auto stepDrawHistsDebug = std::make_shared<DrawHistStepDebug>(
+        "draw_hists_debug", "data_0808/fitted.root", "data_0808/cond_debug.root"
     );
 
-    auto B_SIM = std::make_shared<BinnedTreeStep>(
-        "B_SIM", "big_data/outputSimMerged.root", "big_data/binnedSim.root"
+    auto stepDrawYield = std::make_shared<DrawYieldStep>(
+        "draw_yield", "data_0808/fitted.root", "img/graphs_yield_0808/"
     );
 
-    auto F_SIM = std::make_shared<HistBuilderStepContrast>(
-        "F_SIM", "data_0709/binnedSim.root", "data_0709/histedSim.root"
+    //--------------------------------------------------------
+    // === Симуляционные данные ===
+    //--------------------------------------------------------
+    auto stepConvertSim = std::make_shared<HipoConversionStep>(
+        "convert_sim", "pass3.txt", "/volatile/clas12/borozdin/heavy_data/outputSim.root", true
     );
 
-    auto H_SIM = std::make_shared<ParamFitterStepExt>(
-        "H", "data_0709/histedSim.root", "data_0709/fittedSim.root"
+    auto stepMergeSim = std::make_shared<MergeCyclesStep>(
+        "merge_sim", "big_data/outputSim.root", "big_data/outputSimMerged.root"
     );
 
-    auto G_SIM = std::make_shared<DrawYieldSaplStep>(
-        "G_SIN", "data_0808/fitted.root", "data_0709/fittedSim.root", "img/graphs_yield_0709/"
+    auto stepBinSim = std::make_shared<BinnedTreeStep>(
+        "bin_sim", "/volatile/clas12/borozdin/heavy_data/outputSim.root", "/volatile/clas12/borozdin/heavy_data/binnedSim.root"
     );
 
-    auto J_LUND = std::make_shared<HipoConversionLundStep>(
-        "J_LUND", "pass4.txt", "outputLund.root", true
+    auto stepHistSim = std::make_shared<HistBuilderStepContrast>(
+        "hist_sim", "/volatile/clas12/borozdin/heavy_data/binnedSim.root", "data_0709/histedSim.root"
     );
 
-    auto B_LUND = std::make_shared<BinnedTreeStep>(
-        "B_LUND", "outputLund.root", "data_1809/binned.root"
+    auto stepFitSim = std::make_shared<ParamFitterStepExt>(
+        "fit_sim", "data_0709/histedSim.root", "data_0709/fittedSim.root"
     );
 
-    auto G_LUND = std::make_shared<DrawYieldSaplExtendedStep>(
-        "G_LUND", "data_0808/fitted.root", "data_0709/fittedSim.root", "data_1809/binned.root", "img/graphs_yield_1809/"
+    auto stepDrawYieldExpVsSim = std::make_shared<DrawYieldSaplStep>(
+        "draw_yield_exp_vs_sim",
+        "data_0808/fitted.root",
+        "data_0709/fittedSim.root",
+        "img/graphs_yield_0709/"
     );
 
+    //--------------------------------------------------------
+    // === LUND данные ===
+    //--------------------------------------------------------
+    auto stepConvertLund = std::make_shared<HipoConversionLundStep>(
+        "convert_lund", "pass3.txt", "/volatile/clas12/borozdin/heavy_data/outputLund.root", true
+    );
 
-    auto branch2 = std::make_shared<AnalysisBranch>();
-    branch2->addStep(A);
-    branch2->addStep(B);
-    // С этого момента изменения !!! (F и H)
-    branch2->addStep(F);
-    branch2->addStep(H);
-    branch2->addStep(E);
-    // branch2->addStep(I);
-    branch2->addStep(G);
+    auto stepBinLund = std::make_shared<BinnedTreeStep>(
+        "bin_lund", "/volatile/clas12/borozdin/heavy_data/outputLund.root", "/volatile/clas12/borozdin/heavy_data/binnedLund.root"
+    );
 
-    auto branch3 = std::make_shared<AnalysisBranch>();
-    branch3->addStep(G);
+    auto stepDrawYieldExpVsLund = std::make_shared<DrawYieldSaplExtendedStep>(
+        "draw_yield_exp_vs_lund",
+        "data_0808/fitted.root",
+        "data_0709/fittedSim.root",
+        "/volatile/clas12/borozdin/heavy_data/binnedLund.root",
+        "img/graphs_yield_1809/"
+    );
 
-    auto branch4 = std::make_shared<AnalysisBranch>();
-    branch4->addStep(J);
+    //--------------------------------------------------------
+    // === Рекалькуляции и домашние данные ===
+    //--------------------------------------------------------
+    auto stepBinHome = std::make_shared<BinnedTreeStep>(
+        "bin_home", "big_data/output.root", "big_data/binned_home.root"
+    );
 
-    auto branch5 = std::make_shared<AnalysisBranch>();
-    branch5->addStep(F_home);
+    auto stepHistHome = std::make_shared<HistBuilderStepContrast>(
+        "hist_home", "big_data/binned.root", "big_data/histed_home.root"
+    );
 
-    auto branchSIM6 = std::make_shared<AnalysisBranch>();
-    // branchSIM6->addStep(B_SIM);
-    // branchSIM6->addStep(F_SIM);
-    // branchSIM6->addStep(H_SIM);
-    branchSIM6->addStep(G_SIM);
+    auto stepFitExpRecalc = std::make_shared<ParamFitterStepExt>(
+        "fit_exp_recalc", "data_0808/histed.root", "data_0808/fitted.root"
+    );
 
-    auto branchSIM7 = std::make_shared<AnalysisBranch>();
-    branchSIM7->addStep(A_SIM);
+    auto stepFitSimRecalc = std::make_shared<ParamFitterStepExt>(
+        "fit_sim_recalc", "data_0709/histedSim.root", "data_0709/fittedSim.root"
+    );
 
-    auto branchLUND8 = std::make_shared<AnalysisBranch>();
-    branchLUND8->addStep(J_LUND);
-    // branchLUND8->addStep(B_LUND);
-    // branchLUND8->addStep(G_LUND);
+    //--------------------------------------------------------
+    // === Ветви анализа ===
+    //--------------------------------------------------------
+    auto branchExp = std::make_shared<AnalysisBranch>();
+    // branchExp->addStep(stepConvertExp);
+    branchExp->addStep(stepBinExp);
+    branchExp->addStep(stepHistExp);
+    branchExp->addStep(stepFitExp);
+    // branchExp->addStep(stepDrawHists);
+    // branchExp->addStep(stepDrawYield);
 
+    auto branchSim = std::make_shared<AnalysisBranch>();
+    branchSim->addStep(stepConvertSim);
+    branchSim->addStep(stepBinSim);
+    branchSim->addStep(stepHistSim);
+    branchSim->addStep(stepFitSim);
+    // branchSimYield->addStep(stepDrawYieldExpVsSim);
+
+    auto branchSimMerged = std::make_shared<AnalysisBranch>();
+    branchSimMerged->addStep(stepMergeSim);
+
+    auto branchLund = std::make_shared<AnalysisBranch>();
+    branchLund->addStep(stepConvertLund);
+    branchLund->addStep(stepBinLund);
+    branchLund->addStep(stepDrawYieldExpVsLund);
+
+    auto branchRecalc = std::make_shared<AnalysisBranch>();
+    branchRecalc->addStep(stepFitExpRecalc);
+    branchRecalc->addStep(stepFitSimRecalc);
+
+    //--------------------------------------------------------
+    // === Менеджер анализа ===
+    //--------------------------------------------------------
     AnalysisManager manager;
-    manager.addBranch("experimental", branch2);
-    manager.addBranch("yield builder", branch3);
-    manager.addBranch("output simulation", branch4);
-    manager.addBranch("home", branch5);
-
-    manager.addBranch("home sim", branchSIM6);
-    manager.addBranch("merge sim", branchSIM7);
-    manager.addBranch("yield lund", branchLUND8);
+    manager.addBranch("experiment", branchExp);
+    manager.addBranch("simulation_raw", branchSim);
+    manager.addBranch("simulation_merge", branchSimMerged);
+    manager.addBranch("lund", branchLund);
+    manager.addBranch("recalc", branchRecalc);
 
     manager.describe();
-    // manager.runBranch("experimental");
-    // manager.runBranch("yield builder");
-    // manager.runBranch("output simulation");
-    // manager.runBranch("home");
-    // manager.runBranch("home sim");
-    manager.runBranch("yield lund");
+
+    manager.runBranch("experiment");
+    manager.runBranch("simulation_raw");
+    // manager.runBranch("simulation_merge");
+    manager.runBranch("lund");
+    // manager.runBranch("recalc");
 
     return 0;
 }

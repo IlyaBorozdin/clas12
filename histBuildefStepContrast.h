@@ -45,8 +45,40 @@ protected:
         }
 
         // Читаем данные из дерева
-        double MM;
+        double MM = 0.0;
+        double weight = 1.0;
         tree->SetBranchAddress("MM", &MM);
+        TBranch* weightBranch = tree->GetBranch("weight");
+        if (weightBranch) {
+            tree->SetBranchAddress("weight", &weight);
+        }
+
+        std::vector<WeightedValue> data;
+        Long64_t nEntries = tree->GetEntries();
+        data.reserve(nEntries);
+        
+        for (Long64_t entry = 0; entry < nEntries; ++entry) {
+            tree->GetEntry(entry);
+            data.emplace_back(MM, weightBranch ? weight : 1.0);
+        }
+
+        BinOptimizer optimizer(data, 5.0, 0.5);
+        int optimalBins = optimizer.findOptimalBinCount();
+
+        std::string name = makeCellName(i, j, k, l);
+        std::string title = generateTitle(i, j, k, l);
+
+        // Построение гистограммы
+        double xMin = optimizer.getXMin();
+        double xMax = optimizer.getXMax();
+        TH1F* hist = new TH1F(name.c_str(), title.c_str(), optimalBins, xMin, xMax);
+
+        for (const auto& d : data) {
+            if (d.value >= xMin && d.value <= xMax)
+                hist->Fill(d.value, d.weight);
+        }
+
+        /*
         std::vector<double> values;
         Long64_t nEntries = tree->GetEntries();
         values.reserve(nEntries);
@@ -72,6 +104,7 @@ protected:
             if (val >= xMin && val <= xMax)
                 hist->Fill(val);
         }
+        */
 
         outputFile->cd();
         hist->Write();

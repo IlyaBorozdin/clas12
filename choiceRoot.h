@@ -111,23 +111,20 @@ protected:
     double e_px, e_py, e_pz, pi_px, pi_py, pi_pz;
 };
 
-class ChoiceRootLund : public ChoiceRoot {
+class ChoiceRootWeight : public ChoiceRoot {
 public:
-    ChoiceRootLund(const char* inputFileName,
+    ChoiceRootWeight(const char* inputFileName,
                    const char* outFileName,
                    bool appendMode = false,
                    const char* treeName = "ExpData")
         : ChoiceRoot(inputFileName, outFileName, appendMode, treeName) {
-            tree.Branch("n_px", &n_px, "n_px/D");
-            tree.Branch("n_py", &n_py, "n_py/D");
-            tree.Branch("n_pz", &n_px, "n_pz/D");
-            tree.Branch("g_px", &g_px, "g_px/D");
-            tree.Branch("g_py", &g_py, "g_py/D");
-            tree.Branch("g_pz", &g_pz, "g_pz/D");
+            tree.Branch("weight", &weight, "weight/D");
         }
     void analysisEvent(const DataBanks& banks) override {
-            const hipo::bank* PART = &banks.LUND;
+            const hipo::bank* PART = &banks.PART;
+            const hipo::bank* EVENT = &banks.EVENT;
 
+            weight = EVENT->getFloat("weight", 0);
             for (int i = 0; i < PART->getRows(); i++) {
                 switch (PART->getInt("pid", i))
                 {
@@ -141,14 +138,58 @@ public:
                     pi_py = PART->getFloat("py", i);
                     pi_pz = PART->getFloat("pz", i);
                     break;
+                default:
+                    break;
+                }
+            }
+
+            tree.Fill();
+        }
+
+protected:
+    double weight;
+};
+
+class ChoiceRootLund : public ChoiceRootWeight {
+public:
+    ChoiceRootLund(const char* inputFileName,
+                   const char* outFileName,
+                   bool appendMode = false,
+                   const char* treeName = "ExpData")
+        : ChoiceRootWeight(inputFileName, outFileName, appendMode, treeName) {
+            tree.Branch("n_px", &n_px, "n_px/D");
+            tree.Branch("n_py", &n_py, "n_py/D");
+            tree.Branch("n_pz", &n_px, "n_pz/D");
+            tree.Branch("g_px", &g_px, "g_px/D");
+            tree.Branch("g_py", &g_py, "g_py/D");
+            tree.Branch("g_pz", &g_pz, "g_pz/D");
+        }
+    void analysisEvent(const DataBanks& banks) override {
+            const hipo::bank* LUND = &banks.LUND;
+            const hipo::bank* EVENT = &banks.EVENT;
+
+            weight = EVENT->getFloat("weight", 0);
+            for (int i = 0; i < LUND->getRows(); i++) {
+                switch (LUND->getInt("pid", i))
+                {
+                case ELECTRON:
+                    e_px = LUND->getFloat("px", i);
+                    e_py = LUND->getFloat("py", i);
+                    e_pz = LUND->getFloat("pz", i);
+                    break;
+                case PI_PLUS:
+                    pi_px = LUND->getFloat("px", i);
+                    pi_py = LUND->getFloat("py", i);
+                    pi_pz = LUND->getFloat("pz", i);
+                    break;
                 case NEUTRON:
-                    n_px = PART->getFloat("px", i);
-                    n_py = PART->getFloat("py", i);
-                    n_pz = PART->getFloat("pz", i);
+                    n_px = LUND->getFloat("px", i);
+                    n_py = LUND->getFloat("py", i);
+                    n_pz = LUND->getFloat("pz", i);
                 case PHOTON:
-                    g_px = PART->getFloat("px", i);
-                    g_py = PART->getFloat("py", i);
-                    g_pz = PART->getFloat("pz", i);
+                    g_px = LUND->getFloat("px", i);
+                    g_py = LUND->getFloat("py", i);
+                    g_pz = LUND->getFloat("pz", i);
                 default:
                     break;
                 }

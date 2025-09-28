@@ -70,18 +70,34 @@ protected:
 
         Long64_t nEntries = tree->GetEntries();
 
+        // Подключаем ветку с весами (если есть)
+        double weight = 1.0;
+        if (tree->GetBranch("weight")) {
+            tree->SetBranchAddress("weight", &weight);
+        }
+
+        // Считаем сумму весов и сумму квадратов весов (для ошибки)
+        double weightSum = 0.0;
+        double weight2Sum = 0.0;
+
+        for (Long64_t entry = 0; entry < nEntries; ++entry) {
+            tree->GetEntry(entry);
+            weightSum   += weight;
+            weight2Sum  += weight * weight;
+        }
+
         // Вычисление выхода реакции и ошибки
-        double yPoint = nEntries;
-        double yErr = std::sqrt(nEntries);
+        double yPoint = weightSum;                    // "взвешенное" количество событий
+        double yErr   = std::sqrt(weight2Sum);        // дисперсия для взвешенных событий
 
         double phiCenter = (index_phi + 0.5) * (2 * M_PI / NUMBER_PHI); // центр бина по φ
-        double phiError = (M_PI / NUMBER_PHI); // половина ширины бина
+        double phiError  = (M_PI / NUMBER_PHI); // половина ширины бина
 
         // Добавление точки в соответствующий график
         graphs[index_q2][index_w][index_cos_theta]->SetPoint(index_phi, phiCenter, yPoint);
         graphs[index_q2][index_w][index_cos_theta]->SetPointError(index_phi, phiError, yErr);
-
     }
+
 
     void logProgress() override {
         ++processedTrees;

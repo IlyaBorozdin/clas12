@@ -14,6 +14,7 @@ public:
     hipo::bank TRAJ;
     hipo::bank TRACK;
     hipo::bank LUND;
+    hipo::bank EVENT;
 
     auto begin() const { return std::begin(banks); }
     auto end() const { return std::end(banks); }
@@ -26,6 +27,7 @@ public:
         TRACK = factory.hasSchema("REC::Track") ? hipo::bank(factory.getSchema("REC::Track")) : hipo::bank();
         
         LUND = factory.hasSchema("MC::Lund") ? hipo::bank(factory.getSchema("MC::Lund")) : hipo::bank();
+        EVENT = factory.hasSchema("MC::Event") ? hipo::bank(factory.getSchema("MC::Event")) : hipo::bank();
     }
 
     void getStructure(hipo::event &event) {
@@ -35,5 +37,5 @@ public:
     }
 
 private:
-    hipo::bank* banks[6] = {&PART, &SCINT, &ECAL, &TRAJ, &TRACK, &LUND};
+    hipo::bank* banks[7] = {&PART, &SCINT, &ECAL, &TRAJ, &TRACK, &LUND, &EVENT};
 };

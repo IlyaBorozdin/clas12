@@ -77,4 +77,5 @@ private:
 };
 
 using HipoConversionStep = HipoConversionStepT<ChoiceRoot>;
+using HipoConversionSimStep = HipoConversionStepT<ChoiceRootWeight>;
 using HipoConversionLundStep = HipoConversionStepT<ChoiceRootLund>;

@@ -111,6 +111,7 @@ protected:
                         trees[i][j][k][l]->Branch("W", &W, "W/D");
                         trees[i][j][k][l]->Branch("cos_theta", &cos_theta, "cos_theta/D");
                         trees[i][j][k][l]->Branch("phi", &phi_pi, "phi/D");
+                        trees[i][j][k][l]->Branch("weight", &weight, "weight/D");
                     }
                 }
             }
