@@ -68,19 +68,30 @@ auto cellGenerator = [i = 0, j = 0, k = 0, l = 0]() mutable -> std::function<boo
 }();
 
 std::string generateTitleForYieldPlot(int iq2, int iw, int ict) {
-        // Границы по Q²
-        double q2Min = STEPS_Q2[2 * iq2];
-        double q2Max = STEPS_Q2[2 * iq2 + 1];
+    // Границы по Q²
+    double q2Min = STEPS_Q2[2 * iq2];
+    double q2Max = STEPS_Q2[2 * iq2 + 1];
 
-        // Границы по W
-        double wMin = W_MIN + STEP_W * iw;
-        double wMax = W_MIN + STEP_W * (iw + 1);
+    // Границы по W
+    double wMin = W_MIN + STEP_W * iw;
+    double wMax = W_MIN + STEP_W * (iw + 1);
 
-        // Границы по cos(θ)
-        double cosThetaMin = -1.0 + STEP_COS_THETA * ict;
-        double cosThetaMax = -1.0 + STEP_COS_THETA * (ict + 1);
+    // Границы по cos(θ)
+    double cosThetaMin = -1.0 + STEP_COS_THETA * ict;
+    double cosThetaMax = -1.0 + STEP_COS_THETA * (ict + 1);
 
-        return "Yield vs #phi: Q^{2} = " + formatFloat(q2Min, 1) + "-" + formatFloat(q2Max, 1) +
-            " GeV^{2}, W = " + formatFloat(wMin, 2) + "-" + formatFloat(wMax, 2) + " GeV, " +
-            "cos(#theta) = " + formatFloat(cosThetaMin, 1) + " to " + formatFloat(cosThetaMax, 1) + "; #phi, rad; Yield";
-    }
+    /*
+    return "Yield vs #phi: Q^{2} = " + formatFloat(q2Min, 1) + "-" + formatFloat(q2Max, 1) +
+        " GeV^{2}, W = " + formatFloat(wMin, 2) + "-" + formatFloat(wMax, 2) + " GeV, " +
+        "cos(#theta) = " + formatFloat(cosThetaMin, 1) + " to " + formatFloat(cosThetaMax, 1) + "; #phi, rad; Yield";
+    */
+    return "Yield vs #phi: cos(#theta) = " + formatFloat(cosThetaMin, 1) + " to " + formatFloat(cosThetaMax, 1) + "; #phi, rad; Yield";
+}
+
+std::string generateTitleForEfficiencyPlot(int iq2, int iw, int ict) {
+    // Границы по cos(θ)
+    double cosThetaMin = -1.0 + STEP_COS_THETA * ict;
+    double cosThetaMax = -1.0 + STEP_COS_THETA * (ict + 1);
+
+    return "Efficiency vs #phi: cos(#theta) = " + formatFloat(cosThetaMin, 1) + " to " + formatFloat(cosThetaMax, 1) + "; #phi, rad; Yield";
+}

@@ -24,6 +24,7 @@ public:
     ChoiceRoot(const char* inputFileName,
                const char* outFileName,
                bool appendMode = false,
+               bool cutMode = true,
                const char* treeName = "ExpData")
         : HipoDataAnalysis(readInputFile(inputFileName)),
           file(outFileName, appendMode ? "UPDATE" : "RECREATE"),
@@ -62,7 +63,7 @@ public:
             new HadronAndElectronCuts(hadronAndElectronCuts),
         };
 
-        this->setStandartCuts(standartCuts);
+        if (cutMode) this->setStandartCuts(standartCuts);
 
         tree.Branch("e_px", &e_px, "e_px/D");
         tree.Branch("e_py", &e_py, "e_py/D");
@@ -116,8 +117,9 @@ public:
     ChoiceRootWeight(const char* inputFileName,
                    const char* outFileName,
                    bool appendMode = false,
+                   bool cutMode = true,
                    const char* treeName = "ExpData")
-        : ChoiceRoot(inputFileName, outFileName, appendMode, treeName) {
+        : ChoiceRoot(inputFileName, outFileName, appendMode, cutMode, treeName) {
             tree.Branch("weight", &weight, "weight/D");
         }
     void analysisEvent(const DataBanks& banks) override {
@@ -155,8 +157,9 @@ public:
     ChoiceRootLund(const char* inputFileName,
                    const char* outFileName,
                    bool appendMode = false,
+                   bool cutMode = true,
                    const char* treeName = "ExpData")
-        : ChoiceRootWeight(inputFileName, outFileName, appendMode, treeName) {
+        : ChoiceRootWeight(inputFileName, outFileName, appendMode, cutMode, treeName) {
             tree.Branch("n_px", &n_px, "n_px/D");
             tree.Branch("n_py", &n_py, "n_py/D");
             tree.Branch("n_pz", &n_px, "n_pz/D");

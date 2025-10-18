@@ -1,12 +1,13 @@
 #include "hipoConversionStep.h"
 #include "binnedTreeStep.h"
-#include "histBuildefStepContrast.h"
+#include "histBuilderStepContrast.h"
 #include "paramFitterStepExternal.h"
 
 #include "drawHistStep.h"
 #include "drawHistStepDebug.h"
 #include "drawYieldStep.h"
 #include "drawYieldSaplStep.h"
+#include "drawEfficiencyAndYieldStep.h"
 
 #include "mergeCyclesStep.h"
 #include "source/ManageClasses/analysisManager.h"
@@ -44,10 +45,6 @@ int main() {
         "img/graphs_0808/"
     );
 
-    auto stepDrawHistsDebug = std::make_shared<DrawHistStepDebug>(
-        "draw_hists_debug", "data_0808/fitted.root", "data_0808/cond_debug.root"
-    );
-
     auto stepDrawYield = std::make_shared<DrawYieldStep>(
         "draw_yield", "data_0808/fitted.root", "img/graphs_yield_0808/"
     );
@@ -55,7 +52,7 @@ int main() {
     //--------------------------------------------------------
     // === Симуляционные данные ===
     //--------------------------------------------------------
-    auto stepConvertSim = std::make_shared<HipoConversionStep>(
+    auto stepConvertSim = std::make_shared<HipoConversionSimStep>(
         "convert_sim", "pass3.txt", "/volatile/clas12/borozdin/heavy_data/outputSim.root", true
     );
 
@@ -86,38 +83,28 @@ int main() {
     // === LUND данные ===
     //--------------------------------------------------------
     auto stepConvertLund = std::make_shared<HipoConversionLundStep>(
-        "convert_lund", "pass3.txt", "/volatile/clas12/borozdin/heavy_data/outputLund.root", true
+        "convert_lund", "pass3.txt", "/volatile/clas12/borozdin/heavy_data/outputLundB.root", true,  false
+    );
+
+    auto stepMergeLund = std::make_shared<MergeCyclesStep>(
+        "merge_lund", "big_data/outputLund.root", "big_data/outputLundMerged.root"
     );
 
     auto stepBinLund = std::make_shared<BinnedTreeStep>(
-        "bin_lund", "/volatile/clas12/borozdin/heavy_data/outputLund.root", "/volatile/clas12/borozdin/heavy_data/binnedLund.root"
+        "bin_lund", "/volatile/clas12/borozdin/heavy_data/outputLundB.root", "/volatile/clas12/borozdin/heavy_data/binnedLund.root"
     );
 
-    auto stepDrawYieldExpVsLund = std::make_shared<DrawYieldSaplExtendedStep>(
+    auto stepHistLund = std::make_shared<HistBuilderStepContrast>(
+        "hist_lund", "/volatile/clas12/borozdin/heavy_data/binnedLund.root", "data_0709/histedLund.root"
+    );
+
+    auto stepDrawEfficiencyAndYieldExpVsLund = std::make_shared<DrawEfficiencyAndYieldStep>(
         "draw_yield_exp_vs_lund",
         "data_0808/fitted.root",
         "data_0709/fittedSim.root",
-        "/volatile/clas12/borozdin/heavy_data/binnedLund.root",
+        // "/volatile/clas12/borozdin/heavy_data/binnedLund.root",
+        "data_0709/histedLund.root",
         "img/graphs_yield_1809/"
-    );
-
-    //--------------------------------------------------------
-    // === Рекалькуляции и домашние данные ===
-    //--------------------------------------------------------
-    auto stepBinHome = std::make_shared<BinnedTreeStep>(
-        "bin_home", "big_data/output.root", "big_data/binned_home.root"
-    );
-
-    auto stepHistHome = std::make_shared<HistBuilderStepContrast>(
-        "hist_home", "big_data/binned.root", "big_data/histed_home.root"
-    );
-
-    auto stepFitExpRecalc = std::make_shared<ParamFitterStepExt>(
-        "fit_exp_recalc", "data_0808/histed.root", "data_0808/fitted.root"
-    );
-
-    auto stepFitSimRecalc = std::make_shared<ParamFitterStepExt>(
-        "fit_sim_recalc", "data_0709/histedSim.root", "data_0709/fittedSim.root"
     );
 
     //--------------------------------------------------------
@@ -132,41 +119,43 @@ int main() {
     // branchExp->addStep(stepDrawYield);
 
     auto branchSim = std::make_shared<AnalysisBranch>();
-    branchSim->addStep(stepConvertSim);
+    // branchSim->addStep(stepConvertSim);
     branchSim->addStep(stepBinSim);
     branchSim->addStep(stepHistSim);
     branchSim->addStep(stepFitSim);
     // branchSimYield->addStep(stepDrawYieldExpVsSim);
 
-    auto branchSimMerged = std::make_shared<AnalysisBranch>();
-    branchSimMerged->addStep(stepMergeSim);
-
     auto branchLund = std::make_shared<AnalysisBranch>();
-    branchLund->addStep(stepConvertLund);
+    // branchLund->addStep(stepConvertLund);
     branchLund->addStep(stepBinLund);
-    branchLund->addStep(stepDrawYieldExpVsLund);
+    branchLund->addStep(stepHistLund);
+    branchLund->addStep(stepDrawEfficiencyAndYieldExpVsLund);
 
-    auto branchRecalc = std::make_shared<AnalysisBranch>();
-    branchRecalc->addStep(stepFitExpRecalc);
-    branchRecalc->addStep(stepFitSimRecalc);
+    auto branchRecord = std::make_shared<AnalysisBranch>();
+    branchRecord->addStep(stepConvertSim);
+    branchRecord->addStep(stepConvertLund);
+
+    auto branchMerge = std::make_shared<AnalysisBranch>();
+    branchMerge->addStep(stepMergeSim);
+    branchMerge->addStep(stepMergeLund);
 
     //--------------------------------------------------------
     // === Менеджер анализа ===
     //--------------------------------------------------------
     AnalysisManager manager;
     manager.addBranch("experiment", branchExp);
-    manager.addBranch("simulation_raw", branchSim);
-    manager.addBranch("simulation_merge", branchSimMerged);
+    manager.addBranch("simulation", branchSim);
     manager.addBranch("lund", branchLund);
-    manager.addBranch("recalc", branchRecalc);
+    manager.addBranch("record", branchRecord);
+    manager.addBranch("merge", branchMerge);
 
     manager.describe();
 
     manager.runBranch("experiment");
-    manager.runBranch("simulation_raw");
-    // manager.runBranch("simulation_merge");
+    manager.runBranch("simulation");
     manager.runBranch("lund");
-    // manager.runBranch("recalc");
+    // manager.runBranch("record");
+    // manager.runBranch("merge");
 
     return 0;
 }

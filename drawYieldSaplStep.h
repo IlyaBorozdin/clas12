@@ -52,8 +52,8 @@ protected:
             canvases[iq2].resize(NUMBER_W, nullptr);
             for (int iw = 0; iw < NUMBER_W; ++iw) {
                 std::string cname = "snd_canvas_q2_" + std::to_string(iq2 + 1) + "_w_" + std::to_string(iw + 1);
-                canvases[iq2][iw] = new TCanvas(cname.c_str(), cname.c_str(), 1600, 1200);
-                canvases[iq2][iw]->Divide(4, 3);
+                canvases[iq2][iw] = new TCanvas(cname.c_str(), cname.c_str(), 2000, 800);
+                canvases[iq2][iw]->Divide(5, 2);
             }
         }
 
@@ -110,7 +110,8 @@ public:
           lund(stepName, inputFileLundName) {}
 
 protected:
-    DrawYieldLundShortStep lund;
+    // DrawYieldLundShortStep lund;
+    PseudoShortFitterLundStep lund;
     std::vector<std::vector<std::vector<TGraphErrors*>>> graphsLund;
 
     bool run() override {

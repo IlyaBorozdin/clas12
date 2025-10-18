@@ -38,22 +38,15 @@ protected:
             for (int iw = 0; iw < NUMBER_W; ++iw) {
                 graphs[iq2][iw].resize(NUMBER_COS_THETA, nullptr);
                 std::string cname = "canvas_q2_" + std::to_string(iq2 + 1) + "_w_" + std::to_string(iw + 1);
-                canvases[iq2][iw] = new TCanvas(cname.c_str(), cname.c_str(), 1600, 1200);
-                canvases[iq2][iw]->Divide(4, 3);
+                canvases[iq2][iw] = new TCanvas(cname.c_str(), cname.c_str(), 2000, 800);
+                canvases[iq2][iw]->Divide(5, 2);
 
                 for (int ict = 0; ict < NUMBER_COS_THETA; ++ict) {
-                    graphs[iq2][iw][ict] = new TGraphErrors(NUMBER_PHI);
+                    graphs[iq2][iw][ict] = new TGraphErrors();
                     graphs[iq2][iw][ict]->SetTitle(generateTitleForYieldPlot(iq2, iw, ict).c_str());
                     graphs[iq2][iw][ict]->SetLineWidth(2);
                     graphs[iq2][iw][ict]->SetLineStyle(1);
                     graphs[iq2][iw][ict]->SetLineColor(kBlue);
-
-                    for (int iphi = 0; iphi < NUMBER_PHI; ++iphi) {
-                        double phiCenter = (iphi + 0.5) * (2 * M_PI / NUMBER_PHI);
-                        double phiError = (M_PI / NUMBER_PHI);
-                        graphs[iq2][iw][ict]->SetPoint(iphi, phiCenter, 0.0);  // Y = 0
-                        // graphs[iq2][iw][ict]->SetPointError(iphi, phiError, 0.0);
-                    }
                 }
             }
         }
@@ -71,11 +64,13 @@ protected:
         );
 
         double phiCenter = (index_phi + 0.5) * (2 * M_PI / NUMBER_PHI); // центр бина по φ
-        double phiError = (M_PI / NUMBER_PHI); // половина ширины бина
+        double phiError  = (M_PI / NUMBER_PHI);                         // половина ширины бина
 
-        // Добавление точки в соответствующий график
-        graphs[index_q2][index_w][index_cos_theta]->SetPoint(index_phi, phiCenter, yPoint);
-        graphs[index_q2][index_w][index_cos_theta]->SetPointError(index_phi, phiError, yErr);
+        // Добавление новой точки в конец графика
+        TGraphErrors* gr = graphs[index_q2][index_w][index_cos_theta];
+        int n = gr->GetN(); // текущее количество точек
+        gr->SetPoint(n, phiCenter, yPoint);
+        gr->SetPointError(n, phiError, yErr);
     }
 
     void logProgress() override {

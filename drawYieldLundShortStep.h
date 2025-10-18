@@ -2,6 +2,7 @@
 
 #include "TTree.h"
 #include "TGraphErrors.h"
+#include "TH1F.h"
 
 #include "source/ManageClasses/rootListObjectAnalysisStep.h"
 #include "MM_project_utils.h"
@@ -103,6 +104,82 @@ protected:
         ++processedTrees;
         if (processedTrees % printEvery == 0 || processedTrees == totalObjects) {
             log("Processing tree " + std::to_string(processedTrees) + " / " + std::to_string(totalObjects), LogLevel::Info);
+        }
+    }
+};
+
+class PseudoShortFitterLundStep : public RootListObjectAnalysisStep<TH1F> {
+public:
+    PseudoShortFitterLundStep(const std::string& stepName,
+                              const std::string& inputFileName)
+    : RootListObjectAnalysisStep<TH1F>(stepName, { {"main", inputFileName} }, cellGenerator) {}
+
+    ~PseudoShortFitterLundStep() override = default;
+
+    std::vector<std::vector<std::vector<TGraphErrors*>>> getGraphs() const {
+        return graphs;
+    }
+
+protected:
+    size_t processedHists = 0;
+    size_t skippedHists = 0;
+    size_t printEvery = 2000;
+
+    std::vector<std::vector<std::vector<TGraphErrors*>>> graphs;
+
+    bool initialize() override {
+        if (!RootListObjectAnalysisStep<TH1F>::initialize()) return false;
+
+        // Создаём графики
+        graphs.resize(NUMBER_Q2);
+        for (int iq2 = 0; iq2 < NUMBER_Q2; ++iq2) {
+            graphs[iq2].resize(NUMBER_W);
+            for (int iw = 0; iw < NUMBER_W; ++iw) {
+                graphs[iq2][iw].resize(NUMBER_COS_THETA, nullptr);
+                for (int ict = 0; ict < NUMBER_COS_THETA; ++ict) {
+                    graphs[iq2][iw][ict] = new TGraphErrors(NUMBER_PHI);
+                    graphs[iq2][iw][ict]->SetTitle(generateTitleForYieldPlot(iq2, iw, ict).c_str());
+                    graphs[iq2][iw][ict]->SetLineWidth(2);
+                    graphs[iq2][iw][ict]->SetLineStyle(1);
+                    graphs[iq2][iw][ict]->SetLineColor(kGreen);
+
+                    for (int iphi = 0; iphi < NUMBER_PHI; ++iphi) {
+                        double phiCenter = (iphi + 0.5) * (2 * M_PI / NUMBER_PHI);
+                        double phiError = (M_PI / NUMBER_PHI);
+                        graphs[iq2][iw][ict]->SetPoint(iphi, phiCenter, 0.0);  // Y = 0
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    void processObject(TH1F* hist) override {
+        // Извлекаем координаты ячейки
+        int index_q2, index_w, index_cos_theta, index_phi;
+        if (!parseCellName(hist->GetName(), index_q2, index_w, index_cos_theta, index_phi)) {
+            ++skippedHists;
+            return;
+        }
+
+        // --- Новый способ: интеграл гистограммы ---
+        double yPoint = hist->Integral(); // общее количество событий под гистограммой
+        double yErr   = sqrt(yPoint);
+
+        // Центр и погрешность по оси φ
+        double phiCenter = (index_phi + 0.5) * (2 * M_PI / NUMBER_PHI);
+        double phiError  = (M_PI / NUMBER_PHI);
+
+        // Добавляем точку в график
+        graphs[index_q2][index_w][index_cos_theta]->SetPoint(index_phi, phiCenter, yPoint);
+        graphs[index_q2][index_w][index_cos_theta]->SetPointError(index_phi, phiError, yErr);
+    }
+
+    void logProgress() override {
+        ++processedHists;
+        if (processedHists % printEvery == 0 || processedHists == totalObjects) {
+            log("Processing hist " + std::to_string(processedHists) + " / " + std::to_string(totalObjects), LogLevel::Info);
         }
     }
 };
