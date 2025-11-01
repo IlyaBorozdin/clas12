@@ -86,6 +86,12 @@ protected:
                     canvases[iq2][iw]->cd(ict + 1);
                     graphsExp[iq2][iw][ict]->Draw("APL");
                     graphsSim[iq2][iw][ict]->Draw("PL SAME");
+                    gPad->Update(); // важно: создаёт скрытую гистограмму осей
+
+                    auto* hist = graphsExp[iq2][iw][ict]->GetHistogram();
+                    if (hist) {
+                        hist->SetMinimum(0); // нижняя граница оси Y = 0
+                    }
                 }
 
                 canvases[iq2][iw]->Update();
@@ -138,6 +144,12 @@ protected:
                     graphsExp[iq2][iw][ict]->Draw("APL");
                     graphsSim[iq2][iw][ict]->Draw("PL SAME");
                     graphsLund[iq2][iw][ict]->Draw("PL SAME");
+                    gPad->Update(); // важно: создаёт скрытую гистограмму осей
+
+                    auto* hist = graphsExp[iq2][iw][ict]->GetHistogram();
+                    if (hist) {
+                        hist->SetMinimum(0); // нижняя граница оси Y = 0
+                    }
                 }
 
                 canvases[iq2][iw]->Update();

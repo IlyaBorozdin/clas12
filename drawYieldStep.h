@@ -118,7 +118,13 @@ protected:
                 for (int ict = 0; ict < NUMBER_COS_THETA; ++ict) {
                     canvases[iq2][iw]->cd(ict + 1);
                     graphs[iq2][iw][ict]->Draw("APL");
-                    // graphs[iq2][iw][ict]->Write();
+                    gPad->Update(); // важно: создаёт скрытую гистограмму осей
+
+                    // --- установка нуля внизу ---
+                    auto* hist = graphs[iq2][iw][ict]->GetHistogram();
+                    if (hist) {
+                        hist->SetMinimum(0); // нижняя граница оси Y
+                    }
                 }
 
                 canvases[iq2][iw]->Update();

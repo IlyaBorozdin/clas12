@@ -128,6 +128,12 @@ protected:
                     canvases[iq2][iw]->cd(ict + 1);
                     grCorr->Draw("AP");
                     fitFunc->Draw("same");
+                    gPad->Update(); // важно: создаёт скрытую гистограмму осей
+
+                    auto* hist = grCorr->GetHistogram();
+                    if (hist) {
+                        hist->SetMinimum(0); // нижняя граница оси Y = 0
+                    }
 
                     delete fitFunc;
 

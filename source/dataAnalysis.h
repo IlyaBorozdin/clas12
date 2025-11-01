@@ -24,46 +24,54 @@ public:
     virtual void results() = 0;
 
     void analysisCycle() {
-        for (const string& dataFileName : dataFileNames) {
+        vector<string> failedFiles;
 
+        for (const string& dataFileName : dataFileNames) {
             if (!std::filesystem::exists(dataFileName)) {
                 std::cerr << "Файл не найден: " << dataFileName << std::endl;
                 continue;
             }
 
-            hipo::reader reader;
-            reader.open(dataFileName.c_str());
+            try {
+                hipo::reader reader;
+                reader.open(dataFileName.c_str());
 
-            hipo::dictionary factory;
-            reader.readDictionary(factory);
+                hipo::dictionary factory;
+                reader.readDictionary(factory);
 
-            DataBanks banks;
-            hipo::event event;
+                DataBanks banks;
+                hipo::event event;
+                banks.getSchema(factory);
 
-            banks.getSchema(factory);
+                while (reader.next()) {
+                    reader.read(event);
+                    banks.getStructure(event);
 
-            while (reader.next()) {
+                    numberEvent++;
+                    if (numberEvent % REPEAT == 0) {
+                        std::cout << "Passed Event: " << numberEvent << std::endl;
+                    }
 
-                reader.read(event);
-                banks.getStructure(event);
-
-                numberEvent++;
-                if (numberEvent % REPEAT == 0) {
-                    std::cout << "Passed Event: " << numberEvent << std::endl;
-                }
-
-                try {
-                    if (cutsPassed(banks)) {
-                        analysisEvent(banks);
+                    try {
+                        if (cutsPassed(banks)) {
+                            analysisEvent(banks);
+                        }
+                    } catch(const std::exception& e) {
+                        std::cerr << "Error in event processing: " << e.what() << std::endl;
                     }
                 }
-                catch(const exception& e) {
-                    std::cerr << e.what() << std::endl;
-                }
+            } catch(const std::exception& e) {
+                std::cerr << "Error processing file " << dataFileName << ": " << e.what() << std::endl;
+                failedFiles.push_back(dataFileName);
             }
         }
 
         results();
+
+        if (!failedFiles.empty()) {
+            std::cerr << "\nНе удалось обработать следующие файлы:" << std::endl;
+            for (const auto& f : failedFiles) std::cerr << f << std::endl;
+        }
     }
 
 protected:
