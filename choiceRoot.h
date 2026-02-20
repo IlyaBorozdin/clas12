@@ -26,7 +26,9 @@ public:
         : HipoDataAnalysis(readInputFile(inputFileName)),
           file(outFileName, appendMode ? "UPDATE" : "RECREATE"),
           tree(treeName, "Tree with physics data") {
-        setDefaultCuts();
+        // ВНИМАНИЕ: больше не вызываем setDefaultCuts() здесь!
+        // Это важно, потому что виртуальные методы в конструкторах не виртуальны.
+        // Вызываем только setupBranches (безопасно).
         setupBranches();
     }
 
@@ -123,7 +125,15 @@ protected:
 
 class ChoiceRoot : public ChoiceRootBase {
 public:
-    using ChoiceRootBase::ChoiceRootBase;
+    // явный конструктор, чтобы после полной инициализации вызвать setDefaultCuts()
+    ChoiceRoot(const char* inputFileName,
+               const char* outFileName,
+               bool appendMode = false,
+               const char* treeName = "ExpData")
+        : ChoiceRootBase(inputFileName, outFileName, appendMode, treeName) {
+        // теперь виртуальный setDefaultCuts() вызывает именно ChoiceRoot::setDefaultCuts()
+        setDefaultCuts();
+    }
 
 protected:
     void setDefaultCuts() override {
@@ -182,7 +192,15 @@ protected:
 
 class ChoiceRootSim : public ChoiceRootWeight {
 public:
-    using ChoiceRootWeight::ChoiceRootWeight;
+    // явный конструктор — вызываем setDefaultCuts() здесь
+    ChoiceRootSim(const char* inputFileName,
+                  const char* outFileName,
+                  bool appendMode = false,
+                  const char* treeName = "ExpData")
+        : ChoiceRootWeight(inputFileName, outFileName, appendMode, treeName) {
+        // ВАЖНО: этот вызов теперь сработает как полиморфный — будет вызван ChoiceRootSim::setDefaultCuts
+        setDefaultCuts();
+    }
 
 protected:
     double trueN_px{}, trueN_py{}, trueN_pz{};
@@ -207,7 +225,8 @@ protected:
     }
 
     void setDefaultCuts() override {
-        this->setStandartCuts(makeStandardCuts());  // тот же набор, что и у ChoiceRoot
+        // выбор тех же стандартных наборов, что в ChoiceRoot
+        this->setStandartCuts(makeStandardCuts());
     }
 
     void fillFromBanks(const DataBanks& banks) override {
