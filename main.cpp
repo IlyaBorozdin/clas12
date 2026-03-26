@@ -28,24 +28,24 @@ int main() {
     );
 
     auto stepBinExp = std::make_shared<BinnedTreeStep>(
-        "bin_exp", "/volatile/clas12/borozdin/heavy_data/output.root", "/volatile/clas12/borozdin/heavy_data/binned.root"
+        "bin_exp", std::string(HEAVY_BASE_PATH) + "/output.root", std::string(HEAVY_BASE_PATH) + "/binned_1703.root"
     );
 
     auto stepHistExp = std::make_shared<HistBuilderStepContrast>(
-        "hist_exp", "/volatile/clas12/borozdin/heavy_data/binned.root", "data_0808/histed.root"
+        "hist_exp", std::string(HEAVY_BASE_PATH) + "/binned_1703.root", "data_1703/histed.root"
     );
 
     auto stepFitExp = std::make_shared<ParamFitterStepExt>(
-        "fit_exp", "data_0808/histed.root", "data_0808/fitted.root"
+        "fit_exp", "data_1703/histed.root", "data_1703/fitted.root", "/home/borozdin/move_to_ifarm_1903_1/utils/fit_configs.json"
     );
 
     auto stepDrawHists = std::make_shared<DrawHistStep>(
         "draw_hists",
         std::map<std::string, std::string>{
-            {"main", "data_0808/fitted.root"},
-            {"hist", "data_0808/histed.root"}
+            {"main", "data_1703/fitted.root"},
+            {"hist", "data_1703/histed.root"}
         },
-        "img/graphs_0808/"
+        "img/graphs_1703/exp/"
     );
 
     auto stepDrawYield = std::make_shared<DrawYieldStep>(
@@ -74,24 +74,24 @@ int main() {
     );
 
     auto stepBinSim = std::make_shared<BinnedTreeStep>(
-        "bin_sim", std::string(HEAVY_BASE_PATH) + "/outputSimMerged_0711.root", std::string(HEAVY_BASE_PATH) + "/binnedSim_0711.root"
+        "bin_sim", std::string(HEAVY_BASE_PATH) + "/outputSimMerged_0711.root", std::string(HEAVY_BASE_PATH) + "/binnedSim_1703.root"
     );
 
     auto stepHistSim = std::make_shared<HistBuilderStepContrast>(
-        "hist_sim", std::string(HEAVY_BASE_PATH) + "/binnedSim_0711.root", "data_0709/histedSim.root"
+        "hist_sim", std::string(HEAVY_BASE_PATH) + "/binnedSim_1703.root", "data_1703/histedSim.root"
     );
 
     auto stepFitSim = std::make_shared<ParamFitterStepExt>(
-        "fit_sim", "data_0709/histedSim.root", "data_0709/fittedSim.root"
+        "fit_sim", "data_1703/histedSim.root", "data_1703/fittedSim.root", "/home/borozdin/move_to_ifarm_1903_1/utils/fit_configs.json"
     );
 
     auto stepDrawHistsSim = std::make_shared<DrawHistStep>(
         "draw_hists_sim",
         std::map<std::string, std::string>{
-            {"main", "data_0709/fittedSim.root"},
-            {"hist", "data_0709/histedSim.root"}
+            {"main", "data_1703/fittedSim.root"},
+            {"hist", "data_1703/histedSim.root"}
         },
-        "img/graphs_0709/"
+        "img/graphs_1703/sim/"
     );
 
     auto stepDrawYieldExpVsSim = std::make_shared<DrawYieldSaplStep>(
@@ -122,11 +122,11 @@ int main() {
     );
 
     auto stepBinLund = std::make_shared<BinnedTreeStep>(
-        "bin_lund", std::string(HEAVY_BASE_PATH) + "/outputLundMerged_0711.root", std::string(HEAVY_BASE_PATH) + "/binnedLund_0711.root"
+        "bin_lund", std::string(HEAVY_BASE_PATH) + "/outputLundMerged_0711.root", std::string(HEAVY_BASE_PATH) + "/binnedLund_1703.root"
     );
 
     auto stepHistLund = std::make_shared<HistBuilderStepContrast>(
-        "hist_lund", std::string(HEAVY_BASE_PATH) + "/binnedLund_0711.root", "data_0709/histedLund.root"
+        "hist_lund", std::string(HEAVY_BASE_PATH) + "/binnedLund_1703.root", "data_1703/histedLund.root"
     );
 
     auto stepDrawYieldExpVsSimVsLund = std::make_shared<DrawYieldSaplExtendedStep>(
@@ -139,10 +139,10 @@ int main() {
 
     auto stepDrawEfficiencyAndYieldExpVsLund = std::make_shared<DrawEfficiencyAndYieldStep>(
         "draw_yield_exp_vs_lund",
-        "data_0808/fitted.root",
-        "data_0709/fittedSim.root",
-        "data_0709/histedLund.root",
-        "img/graphs_yield_1809/"
+        "data_1703/fitted.root",
+        "data_1703/fittedSim.root",
+        "data_1703/histedLund.root",
+        "img/graphs_yield_1703/"
     );
 
     //--------------------------------------------------------
@@ -154,7 +154,7 @@ int main() {
     branchExp->addStep(stepHistExp);
     branchExp->addStep(stepFitExp);
     branchExp->addStep(stepDrawHists);
-    branchExp->addStep(stepDrawYield);
+    // branchExp->addStep(stepDrawYield);
 
     auto branchSim = std::make_shared<AnalysisBranch>();
     // branchSim->addStep(stepConvertSim);
@@ -162,13 +162,13 @@ int main() {
     branchSim->addStep(stepHistSim);
     branchSim->addStep(stepFitSim);
     branchSim->addStep(stepDrawHistsSim);
-    branchSim->addStep(stepDrawYieldExpVsSim);
+    // branchSim->addStep(stepDrawYieldExpVsSim);
 
     auto branchLund = std::make_shared<AnalysisBranch>();
     // branchLund->addStep(stepConvertLund);
     branchLund->addStep(stepBinLund);
     branchLund->addStep(stepHistLund);
-    branchLund->addStep(stepDrawYieldExpVsSimVsLund);
+    // branchLund->addStep(stepDrawYieldExpVsSimVsLund);
     branchLund->addStep(stepDrawEfficiencyAndYieldExpVsLund);
 
     auto branchRecord = std::make_shared<AnalysisBranch>();
@@ -196,7 +196,7 @@ int main() {
     // manager.runBranch("record");
     // manager.runBranch("merge");
 
-    // manager.runBranch("experiment");
+    manager.runBranch("experiment");
     manager.runBranch("simulation");
     manager.runBranch("lund");
 

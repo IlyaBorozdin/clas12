@@ -91,7 +91,7 @@ private:
     };
 
     bool isEmptyBack(int i, int j, int k, int l) const {
-        convertVariableToNormal(i, j, k, l);
+        convertNumbersToNormalOrder(i, j, k, l);
 
         if (j == 6 && (k <= 2 || k >= 8)) return true;
         if (j >= 7 && j <= 8 && (k >= 8 && k <= 10)) return true;
@@ -104,7 +104,7 @@ private:
     }
 
     void getZerosParabola(int i, int j, int k, int l, double& x1, double& x2) const {
-        convertVariableToNormal(i, j, k, l);
+        convertNumbersToNormalOrder(i, j, k, l);
 
         if (j == 6 && k >= 3 && k <= 4 && (l <= 3 || l >= 8)) { x1 = 0.80; x2 = 1.20; }
         else if (j == 6 && k >= 3 && k <= 4 && (l >= 4 && l <= 7)) { x1 = 0.78; x2 = 1.12; }

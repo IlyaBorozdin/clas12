@@ -65,7 +65,7 @@ public:
     double getDownEdge(TH1F* hist, int i, int j, int k, int l) const override {
         double downEdge = 0.80;
 
-        convertVariableToNormal(i, j, k, l);
+        convertNumbersToNormalOrder(i, j, k, l);
 
         if ((j == 1 && k == 7 && (l <= 3 || l >= 8)) ||
             (j == 4 && k == 8 && l == 6)) { downEdge = 0.75; }
@@ -103,16 +103,16 @@ private:
     };
 
     bool isEmptyBack(int i, int j, int k, int l) const {
-        convertVariableToNormal(i, j, k, l);
+        convertNumbersToNormalOrder(i, j, k, l);
 
         if (j >= 1 && j <= 3) return true;
         if (j >= 4 && j <= 5 && k >= 1 && k <= 7 && l >= 4 && l <= 7) return true;
-        if (j == 4 && j <= 5 && k >= 8 && k <= 10) return true;
+        if (j >= 4 && j <= 5 && k >= 8 && k <= 10) return true; // вероятно, была ошибка: j == 4 && j <= 5
         return false;
     }
 
     void getZerosParabola(int i, int j, int k, int l, double& x1, double& x2) const {
-        convertVariableToNormal(i, j, k, l);
+        convertNumbersToNormalOrder(i, j, k, l);
 
         if (j == 4 && k >= 1 && k <= 5 && (l <= 3 || l >= 8)) { x1 = 0.86; x2 = 1.10; }
         else if (j == 4 && k == 6 && (l <= 3 || l >= 8)) { x1 = 0.88; x2 = 1.08; }

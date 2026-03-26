@@ -6,14 +6,16 @@
 
 #include "MM_project_utils.h"
 #include "source/ManageClasses/rootListObjectAnalysisStep.h"
-#include "utils/histogramFitterFlexible.h"
+// #include "utils/histogramFitterFlexible.h"
+#include "utils/histogramFitterUniversal.h"
 
 class ParamFitterStepExt : public RootListObjectAnalysisStep<TH1F> {
 public:
     ParamFitterStepExt(const std::string& stepName,
                        const std::string& inputFileName,
-                       const std::string& outputFileName)
-        : RootListObjectAnalysisStep<TH1F>(stepName, { {"main", inputFileName} }, cellGenerator, outputFileName) {}
+                       const std::string& outputFileName,
+                       const std::string& configFileName = "utils/fit_configs.json")
+        : RootListObjectAnalysisStep<TH1F>(stepName, { {"main", inputFileName} }, cellGenerator, outputFileName), fitter(configFileName) {}
 
     ~ParamFitterStepExt() override = default;
 
@@ -87,7 +89,7 @@ protected:
 
 private:
     TTree* outputTree;
-    HistogramFitterFlexible fitter;
+    HistogramFitterUniversal fitter;
 
     double ampGauss, meanGauss, stdDevGauss, asymGauss, ampGaussDelta, meanGaussDelta, stdDevGaussDelta, paramA, paramB, paramC;
     double eAmpGauss, eMeanGauss, eStdDevGauss, eAsymGauss, eAmpGaussDelta, eMeanGaussDelta, eStdDevGaussDelta, errA, errB, errC;

@@ -4,7 +4,7 @@ const double W_MIN = 1.1;
 const double W_MAX = 2.2;
 
 const int NUMBER_Q2 = 7;
-const int NUMBER_W = 22;
+const int NUMBER_W = 44;
 const int NUMBER_COS_THETA = 10;
 const int NUMBER_PHI = 10;
 

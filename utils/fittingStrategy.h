@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../MM_project_const.h"
+
 #include "TH1F.h"
 #include "TF1.h"
 
@@ -97,7 +99,14 @@ public:
         return -4.0 * meanHeight / (dx * dx);
     }
 
-    void convertVariableToNormal(int& i, int& j, int& k, int& l) const {
+    void convertNumbersToNormalOrder(int& i, int& j, int& k, int& l) const {
         ++i; ++j; ++k; ++l;
+    }
+
+    void convertNumbersToVariable(int& i, int& j, int& k, int& l, double& q2, double& w, double& cos_theta, double& phi) const {
+        q2 = (STEPS_Q2[2 * i] + STEPS_Q2[2 * i + 1]) / 2;
+        w = (0.5 + j) * STEP_W + W_MIN;
+        cos_theta = (0.5 + k) * STEP_COS_THETA - 1;
+        phi = (0.5 + l) * STEP_PHI;
     }
 };
