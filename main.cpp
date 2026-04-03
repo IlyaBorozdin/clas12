@@ -8,6 +8,9 @@
 #include "drawYieldStep.h"
 #include "drawYieldSaplStep.h"
 #include "drawEfficiencyAndYieldStep.h"
+#include "imageCollageStep.h"
+
+#include "hipoStatsStep.h"
 
 #include "mergeCyclesStep.h"
 #include "mergeFilesStep.h"
@@ -17,9 +20,6 @@
 // Основная конфигурация анализа
 //------------------------------------------------------------
 int main() {
-
-    
-
     //--------------------------------------------------------
     // === Экспериментальные данные ===
     //--------------------------------------------------------
@@ -45,7 +45,14 @@ int main() {
             {"main", "data_1703/fitted.root"},
             {"hist", "data_1703/histed.root"}
         },
-        "img/graphs_1703/exp/"
+        std::string(HEAVY_BASE_PATH) + "/img/graphs_1703/exp/"
+    );
+
+    auto stepCollageHists = std::make_shared<ImageCollageStep>(
+        "collage_hists",
+        std::string(HEAVY_BASE_PATH) + "/img/graphs_1703/exp/",
+        std::string(HEAVY_BASE_PATH) + "/img/graphs_1703/exp_collage/",
+        std::string(HEAVY_BASE_PATH) + "/img/graphs_1703/exp_collage.tar.gz"
     );
 
     auto stepDrawYield = std::make_shared<DrawYieldStep>(
@@ -91,7 +98,14 @@ int main() {
             {"main", "data_1703/fittedSim.root"},
             {"hist", "data_1703/histedSim.root"}
         },
-        "img/graphs_1703/sim/"
+        std::string(HEAVY_BASE_PATH) + "/img/graphs_1703/sim/"
+    );
+
+    auto stepCollageHistsSim = std::make_shared<ImageCollageStep>(
+        "collage_hists_sim",
+        std::string(HEAVY_BASE_PATH) + "/img/graphs_1703/sim/",
+        std::string(HEAVY_BASE_PATH) + "/img/graphs_1703/sim_collage/",
+        std::string(HEAVY_BASE_PATH) + "/img/graphs_1703/sim_collage.tar.gz"
     );
 
     auto stepDrawYieldExpVsSim = std::make_shared<DrawYieldSaplStep>(
@@ -142,7 +156,13 @@ int main() {
         "data_1703/fitted.root",
         "data_1703/fittedSim.root",
         "data_1703/histedLund.root",
-        "img/graphs_yield_1703/"
+        std::string(HEAVY_BASE_PATH) + "/img/graphs_yield_1703/"
+    );
+
+    auto stepSimpleParticleStats = std::make_shared<SimpleParticleStatsStep>(
+        "stast_particle",
+        "pass5.txt",
+        "simple_stats.txt;"
     );
 
     //--------------------------------------------------------
@@ -154,6 +174,7 @@ int main() {
     branchExp->addStep(stepHistExp);
     branchExp->addStep(stepFitExp);
     branchExp->addStep(stepDrawHists);
+    branchExp->addStep(stepCollageHists);
     // branchExp->addStep(stepDrawYield);
 
     auto branchSim = std::make_shared<AnalysisBranch>();
@@ -162,6 +183,7 @@ int main() {
     branchSim->addStep(stepHistSim);
     branchSim->addStep(stepFitSim);
     branchSim->addStep(stepDrawHistsSim);
+    branchSim->addStep(stepCollageHistsSim);
     // branchSim->addStep(stepDrawYieldExpVsSim);
 
     auto branchLund = std::make_shared<AnalysisBranch>();
@@ -181,6 +203,9 @@ int main() {
     branchMerge->addStep(stepMergeFileSim);
     branchMerge->addStep(stepMergeFileLund);
 
+    auto branchStats = std::make_shared<AnalysisBranch>();
+    branchStats->addStep(stepSimpleParticleStats);
+
     //--------------------------------------------------------
     // === Менеджер анализа ===
     //--------------------------------------------------------
@@ -190,6 +215,7 @@ int main() {
     manager.addBranch("lund", branchLund);
     manager.addBranch("record", branchRecord);
     manager.addBranch("merge", branchMerge);
+    manager.addBranch("stats", branchStats);
 
     manager.describe();
 
@@ -199,6 +225,8 @@ int main() {
     manager.runBranch("experiment");
     manager.runBranch("simulation");
     manager.runBranch("lund");
+
+    // manager.runBranch("stats");
 
     return 0;
 }

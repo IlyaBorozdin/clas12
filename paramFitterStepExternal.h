@@ -49,6 +49,24 @@ protected:
         downEdge = fitter.getDownEdge(hist, i, j, k, l);
         upEdge = fitter.getUpEdge(hist, i, j, k, l);
         width_mm = hist->GetBinWidth(1);
+        
+        // --- Расчет Yield и его погрешности ---
+        // Используем std::abs, чтобы избежать проблем с отрицательными параметрами, если они есть
+        yield = std::sqrt(TMath::Pi() / 2.0) * ampGauss * std::abs(stdDevGauss) * (1.0 + std::abs(asymGauss)) / width_mm;
+        
+        // Погрешность рассчитываем только если параметры не нулевые, чтобы избежать деления на ноль
+        if (ampGauss != 0 && stdDevGauss != 0) {
+            eYield = yield * std::sqrt(
+                std::pow(eAmpGauss / ampGauss, 2) +
+                std::pow(eStdDevGauss / stdDevGauss, 2) +
+                std::pow(eAsymGauss / (1.0 + std::abs(asymGauss)), 2)
+            );
+        } else {
+            eYield = 0.0;
+        }
+        // ---------------------------------------
+
+
         fitter.getNeutronIntegral(hist, i, j, k, l, neutronIntegral);
         fitter.getNeutronPeak(hist, i, j, k, l, neutronPosition, neutronValue);
         fitter.getMaxBin(hist, maxPosition, maxValue);
@@ -93,6 +111,7 @@ private:
 
     double ampGauss, meanGauss, stdDevGauss, asymGauss, ampGaussDelta, meanGaussDelta, stdDevGaussDelta, paramA, paramB, paramC;
     double eAmpGauss, eMeanGauss, eStdDevGauss, eAsymGauss, eAmpGaussDelta, eMeanGaussDelta, eStdDevGaussDelta, errA, errB, errC;
+    double yield, eYield; // Новые переменные для выхода
     double downEdge, upEdge, width_mm, neutronIntegral, neutronValue, neutronPosition, maxValue, maxPosition;
     int index_q2, index_w, index_cos_theta, index_phi;
 
@@ -117,6 +136,9 @@ private:
         outputTree->Branch("errA", &errA, "errA/D");
         outputTree->Branch("errB", &errB, "errB/D");
         outputTree->Branch("errC", &errC, "errC/D");
+        // Регистрация новых веток
+        outputTree->Branch("yield", &yield, "yield/D");
+        outputTree->Branch("eYield", &eYield, "eYield/D");
 
         outputTree->Branch("downEdge", &downEdge, "downEdge/D");
         outputTree->Branch("upEdge", &upEdge, "upEdge/D");

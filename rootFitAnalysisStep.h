@@ -15,6 +15,7 @@ protected:
     double ampGauss, meanGauss, stdDevGauss, asymGauss, ampGaussDelta, meanGaussDelta, stdDevGaussDelta, paramA, paramB, paramC;
     double eAmpGauss, eMeanGauss, eStdDevGauss, eAsymGauss, eAmpGaussDelta, eMeanGaussDelta, eStdDevGaussDelta, errA, errB, errC;
     double downEdge, upEdge, width_mm, neutronIntegral, neutronValue, neutronPosition, maxValue;
+    double yield, eYield;
     int index_q2, index_w, index_cos_theta, index_phi;
 
     virtual bool run() override {
@@ -54,6 +55,8 @@ protected:
         inputTree->SetBranchAddress("errA", &errA);
         inputTree->SetBranchAddress("errB", &errB);
         inputTree->SetBranchAddress("errC", &errC);
+        inputTree->SetBranchAddress("yield", &yield);
+        inputTree->SetBranchAddress("eYield", &eYield);
 
         inputTree->SetBranchAddress("downEdge", &downEdge);
         inputTree->SetBranchAddress("upEdge", &upEdge);

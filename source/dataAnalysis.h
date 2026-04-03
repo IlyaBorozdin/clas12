@@ -38,6 +38,10 @@ public:
         : dataFileNames(dataFileNames), numberEvent(0) {
         installSignalHandlers();
     }
+    explicit HipoDataAnalysis(const char* inputFileName)
+        : dataFileNames(readInputFile(inputFileName)), numberEvent(0) {
+        installSignalHandlers();
+    }
 
     virtual ~HipoDataAnalysis() = default;
 
@@ -98,6 +102,25 @@ public:
 protected:
     void setStandartCuts(const vector<CutWrapper*>& cuts) {
         standartCuts = cuts;
+    }
+
+    static std::vector<std::string> readInputFile(const char* inputFileName) {
+        std::vector<std::string> dataFileNames;
+        std::ifstream inputFile(inputFileName);
+        if (!inputFile.is_open()) {
+            std::cerr << "Incorrect File: " << inputFileName << std::endl;
+            return dataFileNames;
+        }
+        std::string line;
+        while (std::getline(inputFile, line)) {
+            line.erase(std::find_if(line.rbegin(), line.rend(),
+                                    [](unsigned char ch) { return !std::isspace(ch); })
+                           .base(),
+                       line.end());
+            if (!line.empty())
+                dataFileNames.push_back(line);
+        }
+        return dataFileNames;
     }
 
 private:

@@ -56,12 +56,14 @@ protected:
 
     void processEvent() override {
         // Вычисление выхода реакции и ошибки
+        /*
         double yPoint = std::sqrt(M_PI / 2) * ampGauss * std::abs(stdDevGauss) * (1 + std::abs(asymGauss)) / width_mm;
         double yErr = yPoint * std::sqrt(
             std::pow(eAmpGauss / ampGauss, 2) +
             std::pow(eStdDevGauss / stdDevGauss, 2) +
             std::pow(eAsymGauss / (1 + asymGauss), 2)
         );
+        */
 
         double phiCenter = (index_phi + 0.5) * (2 * M_PI / NUMBER_PHI); // центр бина по φ
         double phiError  = (M_PI / NUMBER_PHI);                         // половина ширины бина
@@ -69,8 +71,8 @@ protected:
         // Добавление новой точки в конец графика
         TGraphErrors* gr = graphs[index_q2][index_w][index_cos_theta];
         int n = gr->GetN(); // текущее количество точек
-        gr->SetPoint(n, phiCenter, yPoint);
-        gr->SetPointError(n, phiError, yErr);
+        gr->SetPoint(n, phiCenter, yield);
+        gr->SetPointError(n, phiError, eYield);
     }
 
     void logProgress() override {

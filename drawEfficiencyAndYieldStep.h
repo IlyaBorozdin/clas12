@@ -1,5 +1,7 @@
 #pragma once
 
+#include "TStyle.h"
+
 #include "drawYieldSaplStep.h"
 #include "utils/fittingYield.h"
 
@@ -21,6 +23,13 @@ protected:
         if (!DrawYieldSaplStep::initialize()) {
             return false;
         }
+
+        gStyle->SetTitleFont(42, "t");
+        gStyle->SetTitleFont(42, "XYZ");
+        gStyle->SetLabelFont(42, "XYZ");
+        gStyle->SetTextFont(42);
+        gStyle->SetTitleSize(0.05, "XYZ"); // Сделаем чуть крупнее для TGraph
+        gStyle->SetLabelSize(0.04, "XYZ");
 
         effCanvases.resize(NUMBER_Q2);
         graphsEff.resize(NUMBER_Q2);
@@ -119,21 +128,39 @@ protected:
                     }
 
                     // отрисовка на канвасе
-                    effCanvases[iq2][iw]->cd(ict+1);
-                    grEff->Draw("APL");
+                    // 1. Настройка и отрисовка эффективности
+                    // --- 1. Отрисовка эффективности ---
+                    effCanvases[iq2][iw]->cd(ict + 1);
+                    grEff->Draw("APL"); 
+                    gPad->Update(); // Создаем оси
 
-                    TF1* fitFunc = fitting.fit(grCorr, iq2, iw, ict);
-                    fitFunc->SetLineColor(kBlue);
+                    double minX_e, maxX_e, minY_e, maxY_e;
+                    grEff->ComputeRange(minX_e, minY_e, maxX_e, maxY_e);
+                    if (grEff->GetHistogram()) {
+                        grEff->GetHistogram()->SetMaximum(maxY_e * 1.35);
+                        grEff->GetHistogram()->SetMinimum(0);
+                    }
+                    addKinematicInfoToGraph(grEff, iq2, iw, ict);
+                    gPad->Modified(); // Помечаем, что пад изменился
 
+                    // --- 2. Отрисовка выхода (Yield) ---
                     canvases[iq2][iw]->cd(ict + 1);
                     grCorr->Draw("AP");
-                    fitFunc->Draw("same");
-                    gPad->Update(); // важно: создаёт скрытую гистограмму осей
 
-                    auto* hist = grCorr->GetHistogram();
-                    if (hist) {
-                        hist->SetMinimum(0); // нижняя граница оси Y = 0
+                    TF1* fitFunc = fitting.fit(grCorr, iq2, iw, ict);
+                    fitFunc->SetLineColor(kRed);
+                    fitFunc->Draw("same");
+
+                    gPad->Update(); 
+
+                    double minX_c, maxX_c, minY_c, maxY_c;
+                    grCorr->ComputeRange(minX_c, minY_c, maxX_c, maxY_c);
+                    if (grCorr->GetHistogram()) {
+                        grCorr->GetHistogram()->SetMaximum(maxY_c * 1.35);
+                        grCorr->GetHistogram()->SetMinimum(0);
                     }
+                    addKinematicInfoToGraph(grCorr, iq2, iw, ict);
+                    gPad->Modified();
 
                     delete fitFunc;
 
@@ -167,6 +194,28 @@ private:
             }
         }
         return -1; // не нашли
+    }
+
+    void addKinematicInfoToGraph(TGraphErrors* gr, int iq2, int iw, int ict) const {
+        // Рассчитываем границы (аналогично вашему HistBuilderStep)
+        double q2Min = STEPS_Q2[2 * iq2], q2Max = STEPS_Q2[2 * iq2 + 1];
+        double wMin = W_MIN + STEP_W * iw, wMax = W_MIN + STEP_W * (iw + 1);
+        double cosMin = -1.0 + STEP_COS_THETA * ict, cosMax = -1.0 + STEP_COS_THETA * (ict + 1);
+
+        // Позиционируем в верхнем левом углу, чтобы не перекрывать точки (обычно они справа)
+        TPaveText* pt = new TPaveText(0.15, 0.70, 0.45, 0.88, "NDC");
+        pt->SetBorderSize(1);
+        pt->SetFillColor(0);
+        pt->SetTextAlign(12);
+        pt->SetTextFont(42);
+        pt->SetTextSize(0.035);
+
+        pt->AddText(Form("Q^{2}: %.2f-%.2f GeV^{2}", q2Min, q2Max));
+        pt->AddText(Form("W: %.3f-%.3f GeV", wMin, wMax));
+        pt->AddText(Form("cos(#theta^{*}): %.2f-%.2f", cosMin, cosMax));
+
+        // Добавляем объект в список функций графа, чтобы он рисовался вместе с ним
+        gr->GetListOfFunctions()->Add(pt);
     }
 
 };

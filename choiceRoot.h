@@ -23,7 +23,7 @@ public:
                    const char* outFileName,
                    bool appendMode = false,
                    const char* treeName = "ExpData")
-        : HipoDataAnalysis(readInputFile(inputFileName)),
+        : HipoDataAnalysis(inputFileName),
           file(outFileName, appendMode ? "UPDATE" : "RECREATE"),
           tree(treeName, "Tree with physics data") {
         // ВНИМАНИЕ: больше не вызываем setDefaultCuts() здесь!
@@ -63,25 +63,6 @@ protected:
 
     virtual void fillFromBanks(const DataBanks& banks) = 0;
     virtual void setDefaultCuts() {}  // ничего по умолчанию
-
-    static std::vector<std::string> readInputFile(const char* inputFileName) {
-        std::vector<std::string> dataFileNames;
-        std::ifstream inputFile(inputFileName);
-        if (!inputFile.is_open()) {
-            std::cerr << "Incorrect File: " << inputFileName << std::endl;
-            return dataFileNames;
-        }
-        std::string line;
-        while (std::getline(inputFile, line)) {
-            line.erase(std::find_if(line.rbegin(), line.rend(),
-                                    [](unsigned char ch) { return !std::isspace(ch); })
-                           .base(),
-                       line.end());
-            if (!line.empty())
-                dataFileNames.push_back(line);
-        }
-        return dataFileNames;
-    }
 
     // --- общий метод, создающий стандартные наборы Cuts ---
     static std::vector<CutWrapper*> makeStandardCuts() {
