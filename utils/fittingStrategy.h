@@ -14,6 +14,8 @@ public:
     virtual double getDownEdge(TH1F* hist, int i, int j, int k, int l) const = 0;
     virtual double getUpEdge(TH1F* hist, int i, int j, int k, int l) const = 0;
     virtual double getDeltaPeak(TH1F* hist, int i, int j, int k, int l) const = 0;
+    virtual double calculateYield(TF1* func, double binWidth) const = 0;
+    virtual double calculateYieldError(TF1* func, double binWidth) const = 0;
     
     void getNeutronPeak(TH1F* hist, int i, int j, int k, int l, double& maxPosition, double& maxValue) const {
         double downEdge = getDownEdge(hist, i, j, k, l);

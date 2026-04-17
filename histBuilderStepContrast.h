@@ -80,7 +80,8 @@ protected:
             data.emplace_back(MM, weightBranch ? weight : 1.0);
         }
 
-        BinOptimizer optimizer(data, 5.0, 0.5);
+        // BinOptimizer optimizer(data, 5.0, 0.5);
+        BinOptimizer optimizer(data, 7.5, 0.5);
         int optimalBins = optimizer.findOptimalBinCount();
         double xMin = optimizer.getXMin();
         double xMax = optimizer.getXMax();
@@ -100,7 +101,8 @@ protected:
         // --- 2. Dynamic Y-axis Scaling ---
         // Добавляем 35% запаса сверху, чтобы TPaveText ничего не перекрывал
         double maxContent = hist->GetMaximum();
-        hist->SetMaximum(maxContent * 1.35);
+        // hist->SetMaximum(maxContent * 1.35);
+        hist->SetMaximum(maxContent * 1.45);
         hist->SetMinimum(0);
 
         // --- 3. Info Pave Panel ---

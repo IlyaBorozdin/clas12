@@ -76,6 +76,7 @@ protected:
         TF1* subFunc = new TF1("SubFunc", strSubFunc.c_str(), downEdge, upEdge);
         setFunctionParams(fitFunc, subFunc);
 
+        canvas->SetGrid();
         canvas->cd();
 
         // Рисуем гистограмму. Т.к. первая панель уже в списке функций hist, она отрисуется сама
@@ -101,9 +102,16 @@ protected:
         // Рассчитываем относительную погрешность
         double relError = (yield != 0) ? (eYield / yield) : 0.0;
 
-        // Используем синтаксис TLatex для греческих букв и индексов
-        yieldInfo->AddText(Form("Y = %.2f", yield));
-        yieldInfo->AddText(Form("#sigma_{Y} / Y = %.3f", relError));
+        // --- В блоке создания Yield панели ---
+        if (yield > 0) {
+            double relError = eYield / yield;
+            yieldInfo->AddText(Form("Y = %.2f #pm %.2f", yield, eYield));
+            yieldInfo->AddText(Form("#deltaY / Y = %.3f", relError));
+        } else {
+            // Для пустых бинов показываем только верхний предел
+            yieldInfo->AddText("Y = 0.00");
+            yieldInfo->AddText(Form("up limit: %.2f", eYield)); 
+        }
         
         yieldInfo->Draw("same"); // Отрисовываем поверх
 

@@ -37,53 +37,63 @@ protected:
 
     void processObject(TH1F* hist) override {
         int i, j, k, l;
-        if (!parseCellName(hist->GetName(), i, j, k, l) || fitter.getFitRegionEvents(hist, i, j, k, l) == 0) {
+        if (!parseCellName(hist->GetName(), i, j, k, l)) {
             ++skippedHists;
             return;
         }
 
-        TF1* fitFunc = fitter.fit(hist, i, j, k, l);
+        // Определяем "пустоту" в зоне интереса
+        double eventsInFitRegion = fitter.getFitRegionEvents(hist, i, j, k, l);
+        bool isEmpty = (eventsInFitRegion < 0.5); // Меньше одного честного события
 
-        fillParams(fitFunc);
-
+        width_mm = hist->GetBinWidth(1);
         downEdge = fitter.getDownEdge(hist, i, j, k, l);
         upEdge = fitter.getUpEdge(hist, i, j, k, l);
-        width_mm = hist->GetBinWidth(1);
-        
-        // --- Расчет Yield и его погрешности ---
-        // Используем std::abs, чтобы избежать проблем с отрицательными параметрами, если они есть
-        yield = std::sqrt(TMath::Pi() / 2.0) * ampGauss * std::abs(stdDevGauss) * (1.0 + std::abs(asymGauss)) / width_mm;
-        
-        // Погрешность рассчитываем только если параметры не нулевые, чтобы избежать деления на ноль
-        if (ampGauss != 0 && stdDevGauss != 0) {
-            eYield = yield * std::sqrt(
-                std::pow(eAmpGauss / ampGauss, 2) +
-                std::pow(eStdDevGauss / stdDevGauss, 2) +
-                std::pow(eAsymGauss / (1.0 + std::abs(asymGauss)), 2)
-            );
+
+        if (isEmpty) {
+            fillEmptyParams();
+            // Статистическая оценка: верхний предел при 0 событий (68% CL)
+            // Если есть веса, тут должна быть средняя цена деления (weight)
+            yield = 0.0;
+            eYield = 1.15 / width_mm; 
+            
+            neutronIntegral = 0.0;
+            neutronPosition = 0.9396; // Номинал
+            neutronValue = 0.0;
         } else {
-            eYield = 0.0;
+            TF1* fitFunc = fitter.fit(hist, i, j, k, l);
+            fillParams(fitFunc);
+
+            // Твоя формула аналитического выхода
+            yield = std::sqrt(TMath::Pi() / 2.0) * ampGauss * std::abs(stdDevGauss) * (1.0 + std::abs(asymGauss)) / width_mm;
+            
+            if (ampGauss != 0 && stdDevGauss != 0) {
+                eYield = yield * std::sqrt(
+                    std::pow(eAmpGauss / ampGauss, 2) +
+                    std::pow(eStdDevGauss / stdDevGauss, 2) +
+                    std::pow(eAsymGauss / (1.0 + std::abs(asymGauss)), 2)
+                );
+            } else {
+                eYield = 1.15 / width_mm; 
+            }
+
+            fitter.getNeutronIntegral(hist, i, j, k, l, neutronIntegral);
+            fitter.getNeutronPeak(hist, i, j, k, l, neutronPosition, neutronValue);
+            delete fitFunc;
         }
-        // ---------------------------------------
 
-
-        fitter.getNeutronIntegral(hist, i, j, k, l, neutronIntegral);
-        fitter.getNeutronPeak(hist, i, j, k, l, neutronPosition, neutronValue);
         fitter.getMaxBin(hist, maxPosition, maxValue);
-
         index_q2 = i;
         index_w = j;
         index_cos_theta = k;
         index_phi = l;
 
         outputTree->Fill();
-        delete fitFunc;
     }
 
+    // Обязательно меняем check, чтобы пустые гистограммы проходили дальше!
     bool check(TH1F* hist) override {
-        if (hist->GetEntries() > 0) return true;
-        ++skippedHists;
-        return false;
+        return true; 
     }
 
 
@@ -175,5 +185,20 @@ private:
         errA = fitFunc->GetParError(4);
         errB = fitFunc->GetParError(5);
         errC = fitFunc->GetParError(6);
+    }
+
+    void fillEmptyParams() {
+        ampGauss = 0.0;     eAmpGauss = 0.0;
+        meanGauss = 0.9396;  eMeanGauss = 0.0;
+        stdDevGauss = 0.03; eStdDevGauss = 0.0;
+        asymGauss = 0.0;    eAsymGauss = 0.0;
+
+        ampGaussDelta = 0.0; eAmpGaussDelta = 0.0;
+        meanGaussDelta = 1.232; eMeanGaussDelta = 0.0; // Номинал Дельты
+        stdDevGaussDelta = 0.03; eStdDevGaussDelta = 0.0;
+
+        paramA = 0.0; errA = 0.0;
+        paramB = 0.0; errB = 0.0;
+        paramC = 0.0; errC = 0.0;
     }
 };

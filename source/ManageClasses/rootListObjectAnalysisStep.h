@@ -95,5 +95,5 @@ protected:
 
     // 👇 Специализируется в потомке
     virtual void processObject(T* object) = 0;
-    virtual void logProgress() = 0;
+    virtual void logProgress() {};
 };

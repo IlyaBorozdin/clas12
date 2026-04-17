@@ -1,9 +1,11 @@
 #include "hipoConversionStep.h"
 #include "binnedTreeStep.h"
 #include "histBuilderStepContrast.h"
-#include "paramFitterStepExternal.h"
+// #include "paramFitterStepExternal.h"
+#include "legacyParamFitterStep.h"
 
-#include "drawHistStep.h"
+// #include "drawHistStep.h"
+#include "newDrawHistStep.h"
 #include "drawHistStepDebug.h"
 #include "drawYieldStep.h"
 #include "drawYieldSaplStep.h"
@@ -35,17 +37,21 @@ int main() {
         "hist_exp", std::string(HEAVY_BASE_PATH) + "/binned_1703.root", "data_1703/histed.root"
     );
 
-    auto stepFitExp = std::make_shared<ParamFitterStepExt>(
-        "fit_exp", "data_1703/histed.root", "data_1703/fitted.root", "/home/borozdin/move_to_ifarm_1903_1/utils/fit_configs.json"
+    auto stepFitExp = std::make_shared<EMGParamFitterStep>(
+        "fit_exp",
+        "data_1703/histed.root",
+        "data_1703/fitted.root",
+        "/home/borozdin/data_1703/fit_configs.json"
     );
 
-    auto stepDrawHists = std::make_shared<DrawHistStep>(
+    auto stepDrawHists = std::make_shared<NewDrawHistStep>(
         "draw_hists",
         std::map<std::string, std::string>{
             {"main", "data_1703/fitted.root"},
             {"hist", "data_1703/histed.root"}
         },
-        std::string(HEAVY_BASE_PATH) + "/img/graphs_1703/exp/"
+        std::string(HEAVY_BASE_PATH) + "/img/graphs_1703/exp/",
+        stepFitExp->getFitModel()
     );
 
     auto stepCollageHists = std::make_shared<ImageCollageStep>(
@@ -88,17 +94,21 @@ int main() {
         "hist_sim", std::string(HEAVY_BASE_PATH) + "/binnedSim_1703.root", "data_1703/histedSim.root"
     );
 
-    auto stepFitSim = std::make_shared<ParamFitterStepExt>(
-        "fit_sim", "data_1703/histedSim.root", "data_1703/fittedSim.root", "/home/borozdin/move_to_ifarm_1903_1/utils/fit_configs.json"
+    auto stepFitSim = std::make_shared<EMGParamFitterStep>(
+        "fit_sim",
+        "data_1703/histedSim.root",
+        "data_1703/fittedSim.root",
+        "/home/borozdin/data_1703/fit_configs.json"
     );
 
-    auto stepDrawHistsSim = std::make_shared<DrawHistStep>(
+    auto stepDrawHistsSim = std::make_shared<NewDrawHistStep>(
         "draw_hists_sim",
         std::map<std::string, std::string>{
             {"main", "data_1703/fittedSim.root"},
             {"hist", "data_1703/histedSim.root"}
         },
-        std::string(HEAVY_BASE_PATH) + "/img/graphs_1703/sim/"
+        std::string(HEAVY_BASE_PATH) + "/img/graphs_1703/sim/",
+        stepFitSim->getFitModel()
     );
 
     auto stepCollageHistsSim = std::make_shared<ImageCollageStep>(
@@ -223,8 +233,8 @@ int main() {
     // manager.runBranch("merge");
 
     manager.runBranch("experiment");
-    manager.runBranch("simulation");
-    manager.runBranch("lund");
+    // manager.runBranch("simulation");
+    // manager.runBranch("lund");
 
     // manager.runBranch("stats");
 

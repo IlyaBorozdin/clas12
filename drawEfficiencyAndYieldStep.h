@@ -46,6 +46,8 @@ protected:
                 graphsEff[iq2][iw].resize(NUMBER_COS_THETA, nullptr);
                 graphsCorr[iq2][iw].resize(NUMBER_COS_THETA, nullptr);
                 for (int ict = 0; ict < NUMBER_COS_THETA; ++ict) {
+                    effCanvases[iq2][iw]->GetPad(ict + 1)->SetGrid();
+
                     graphsEff[iq2][iw][ict] = new TGraphErrors();
                     graphsEff[iq2][iw][ict]->SetTitle(generateTitleForEfficiencyPlot(iq2, iw, ict).c_str());
                     graphsEff[iq2][iw][ict]->SetLineColor(kBlue);

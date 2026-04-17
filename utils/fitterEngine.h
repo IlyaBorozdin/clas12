@@ -9,11 +9,10 @@
 
 using json = nlohmann::json;
 
-class HistogramFitterUniversal : public FittingStrategy {
-private:
+class FitterEngine : public FittingStrategy {
+protected:
     json config;
 
-    // Рекурсивное слияние объектов для гранулярного обновления параметров
     void deepMerge(json& target, const json& source) const {
         for (auto it = source.begin(); it != source.end(); ++it) {
             if (it.value().is_object() && target.contains(it.key()) && target[it.key()].is_object()) {
@@ -112,51 +111,12 @@ private:
     }
 
 public:
-    HistogramFitterUniversal(const std::string& configPath) {
+    FitterEngine(const std::string& configPath) {
         std::ifstream f(configPath);
         f >> config;
     }
 
-    TF1* fit(TH1F* hist, int i, int j, int k, int l) const override {
-        json p = getEffectiveParams(i, j, k, l);
-        
-        double xMin = getDownEdge(hist, i, j, k, l);
-        double xMax = getUpEdge(hist, i, j, k, l);
-
-        double maxPosition, maxValue;
-        getNeutronPeak(hist, i, j, k, l, maxPosition, maxValue);
-
-        // Создаем универсальную функцию (например, Gauss + Gauss + Parabolic Pol2)
-        // Название и формула зависят от вашей модели
-        TF1* f = new TF1("fit_func", "[0]*exp(-0.5*((x-[1])/[2]*(x < [1] ? [3] : 1))^2) + TMath::Max(0., [4]*(x - [5])*(x - [6])) + [7]*exp(-0.5*((x-[8])/[9])^2)", xMin, xMax);
-
-        // Пример маппинга параметров из JSON на индексы TF1
-        f->SetParameter(0, maxValue);
-        f->SetParameter(1, maxPosition);
-
-        configureParameter(f, 2, "stdDevGauss", p["stdDevGauss"]);
-        configureParameter(f, 3, "asymGauss", p["asymGauss"]);
-
-        configureParameter(f, 4, "ampBack", p["ampBack"]);
-        configureParameter(f, 5, "x1", p["x1"]);
-        configureParameter(f, 6, "x2", p["x2"]);
-
-        configureParameter(f, 7, "ampGaussDelta", p["ampGaussDelta"]);
-        configureParameter(f, 8, "meanGaussDelta", p["meanGaussDelta"]);
-        configureParameter(f, 9, "stdDevGaussDelta", p["stdDevGaussDelta"]);
-
-        f->SetParLimits(0, 0.05 * maxValue, 1.1 * maxValue);
-        f->SetParLimits(1, xMin, 1.05);
-        f->SetParLimits(2, 0.0085, 0.085);
-        f->SetParLimits(3, 0.33, 3.00);
-        f->SetParLimits(7, 0.00, hist->GetBinContent(hist->FindBin(getDeltaPeak(hist, i, j, k, l))));
-        f->SetParLimits(9, 0.01, 0.1);
-
-        hist->Fit(f, "RQ");
-        return f;
-    }
-
-    // Методы Get... теперь просто дергают общую функцию слияния
+    // Эти методы общие для всех — границы бина зависят от кинематики, а не от функции
     double getDownEdge(TH1F* hist, int i, int j, int k, int l) const override {
         double downEdge =  getEffectiveParams(i, j, k, l).value("downEdge", 0.8);
         double x_min = hist->GetXaxis()->GetXmin();
@@ -176,6 +136,9 @@ public:
     double getDeltaPeak(TH1F* hist, int i, int j, int k, int l) const override {
         json p = getEffectiveParams(i, j, k, l);
         if (p.contains("meanGaussDelta")) return p["meanGaussDelta"].value("val", 0.0);
-        return 0.0;
+        return 1.232;
     }
+    
+    // Чисто виртуальный метод — конкретика будет в наследниках
+    virtual TF1* fit(TH1F* hist, int i, int j, int k, int l) const override = 0;
 };

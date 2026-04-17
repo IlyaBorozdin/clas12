@@ -54,6 +54,10 @@ protected:
                 std::string cname = "snd_canvas_q2_" + std::to_string(iq2 + 1) + "_w_" + std::to_string(iw + 1);
                 canvases[iq2][iw] = new TCanvas(cname.c_str(), cname.c_str(), 2000, 800);
                 canvases[iq2][iw]->Divide(5, 2);
+
+                for (int ict = 0; ict < NUMBER_COS_THETA; ++ict) {
+                    canvases[iq2][iw]->GetPad(ict + 1)->SetGrid();
+                }
             }
         }
 
