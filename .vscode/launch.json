@@ -1,0 +1,52 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ROOT Launch (Macro)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/opt/homebrew/bin/root",
+            "args": [
+                "-l",
+                "-q",
+                "${file}"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb"
+        },
+        {
+            "name": "CLAS12ROOT Launch (Macro)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/Users/boroz/clas12root/bin/clas12root",
+            "args": [
+                "-l",
+                "-q",
+                "${file}"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb"
+        },
+        {
+            "name": "CLAS12ROOT Launch No Exit",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/Users/boroz/clas12root/bin/clas12root",
+            "args": [
+                "-l",
+                "${file}"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb"
+        }
+    ]
+}

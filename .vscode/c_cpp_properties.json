@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/opt/homebrew/include",
+                "/opt/homebrew/include/root",
+                "/Users/boroz/clas12root/Clas12Banks",
+                "/Users/boroz/clas12root/Clas12Root",
+                "/Users/boroz/clas12root/hipo4",
+                "/Users/boroz/clas12root/hipo/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "macos-clang-arm64"
+        }
+    ],
+    "version": 4
+}

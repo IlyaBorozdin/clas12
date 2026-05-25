@@ -1,0 +1,17 @@
+# Неактуальные проекты
+iii/
+iv/
+viii/
+big_data/
+raw_data/
+translator/
+
+# Изображения
+img/
+*.png
+
+# Дата
+*.root
+*.hipo
+*.log
+*.txt
