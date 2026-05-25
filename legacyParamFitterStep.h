@@ -4,6 +4,9 @@
 #include "utils/legacyNeutronFitter.h"
 #include "utils/fitModel.h"
 
+#include "utils/jsonParameterProvider.h"
+#include "utils/baseHistogramAnalyzer.h"
+
 class LegacyParamFitterStep : public ParamFitterStepBase {
 private:
     // Специфичные переменные
@@ -20,7 +23,10 @@ public:
                           const std::string& output, 
                           const std::string& config)
         : ParamFitterStepBase(stepName, input, output, 
-          std::make_unique<LegacyNeutronFitter>(config)) {} // Инъекция конкретного фиттера
+          std::make_unique<EMGNeutronFitter>(
+            new JsonParameterProvider(config),
+            new BaseHistogramAnalyzer()
+          )) {}
 
     std::unique_ptr<FitModel> getFitModel() const {
         return std::make_unique<LegacyFitModel>();
@@ -108,7 +114,10 @@ public:
                        const std::string& output, 
                        const std::string& config)
         : ParamFitterStepBase(stepName, input, output, 
-          std::make_unique<EMGNeutronFitter>(config)) {}
+          std::make_unique<EMGNeutronFitter>(
+            new JsonParameterProvider(config),
+            new BaseHistogramAnalyzer()
+          )) {}
 
     std::unique_ptr<FitModel> getFitModel() const {
         return std::make_unique<EMGFitModel>();

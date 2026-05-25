@@ -1,6 +1,6 @@
 #pragma once
 
-#include "source/ManageClasses/rootTreeStep.h"
+#include "source/manageClasses/rootTreeStep.h"
 
 class RootFitAnalysisStep : public RootTreeStep {
 public:

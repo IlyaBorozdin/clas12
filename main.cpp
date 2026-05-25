@@ -16,7 +16,7 @@
 
 #include "mergeCyclesStep.h"
 #include "mergeFilesStep.h"
-#include "source/ManageClasses/analysisManager.h"
+#include "source/manageClasses/analysisManager.h"
 
 //------------------------------------------------------------
 // Основная конфигурация анализа

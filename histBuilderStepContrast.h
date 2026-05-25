@@ -9,7 +9,7 @@
 #include "TList.h"
 #include "TStyle.h"
 
-#include "source/ManageClasses/rootListObjectAnalysisStep.h"
+#include "source/manageClasses/rootListObjectAnalysisStep.h"
 #include "MM_project_const.h"
 #include "MM_project_utils.h"
 #include "utils/binOptimizer.h"
@@ -102,7 +102,7 @@ protected:
         // Добавляем 35% запаса сверху, чтобы TPaveText ничего не перекрывал
         double maxContent = hist->GetMaximum();
         // hist->SetMaximum(maxContent * 1.35);
-        hist->SetMaximum(maxContent * 1.45);
+        hist->SetMaximum(maxContent * 1.50);
         hist->SetMinimum(0);
 
         // --- 3. Info Pave Panel ---

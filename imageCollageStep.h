@@ -6,7 +6,7 @@
 #include <cstdlib> // для std::system
 #include <filesystem>
 
-#include "source/ManageClasses/baseStep.h"
+#include "source/manageClasses/baseStep.h"
 #include "MM_project_utils.h"
 #include "MM_project_const.h"
 

@@ -104,7 +104,8 @@ protected:
 
 private:
     TPaveText* drawInfoPave() {
-        TPaveText* pt = new TPaveText(0.65, 0.52, 0.90, 0.63, "NDC");
+        double y2 = (yield > 0) ? 0.68 : 0.63; // 3 строки vs 2 строки
+        TPaveText* pt = new TPaveText(0.65, 0.52, 0.90, y2, "NDC");
         pt->SetBorderSize(1);
         pt->SetFillColor(0);
         pt->SetTextAlign(12);
@@ -117,6 +118,8 @@ private:
             double relError = eYield / yield;
             pt->AddText(Form("Y = %.2f #pm %.2f", yield, eYield));
             pt->AddText(Form("#deltaY / Y = %.3f", relError));
+            TText *t = pt->AddText(Form("#chi^{2} / NDF = %.2f", chi2ndf));
+            if (chi2ndf > 3.0) t->SetTextColor(kRed);
         } else {
             pt->AddText("Y = 0.00");
             pt->AddText(Form("Up limit: %.2f", eYield));

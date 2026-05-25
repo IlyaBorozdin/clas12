@@ -1,7 +1,7 @@
 #pragma once
 
-#include "source/ManageClasses/rootListObjectAnalysisStep.h"
-#include "utils/fittingStrategy.h"
+#include "source/manageClasses/rootListObjectAnalysisStep.h"
+#include "utils/fitterStrategy.h"
 #include "MM_project_utils.h"
 
 #include "TH1F.h"
@@ -13,18 +13,18 @@ public:
     ParamFitterStepBase(const std::string& stepName,
                         const std::string& inputFileName,
                         const std::string& outputFileName,
-                        std::unique_ptr<FittingStrategy> strategy) // Принимаем любой фиттер
+                        std::unique_ptr<FitterStrategy> strategy) // Принимаем любой фиттер
         : RootListObjectAnalysisStep<TH1F>(stepName, { {"main", inputFileName} }, cellGenerator, outputFileName), 
           fitter(std::move(strategy)) {}
 
     virtual ~ParamFitterStepBase() = default;
 
 protected:
-    std::unique_ptr<FittingStrategy> fitter; // Наш универсальный движок
+    std::unique_ptr<FitterStrategy> fitter; // Наш универсальный движок
     TTree* outputTree = nullptr;
 
     // Общие переменные для всех видов фитов
-    double yield, eYield, width_mm, downEdge, upEdge;
+    double yield, eYield, chi2ndf, width_mm, downEdge, upEdge;
     double neutronIntegral, neutronValue, neutronPosition, maxValue, maxPosition;
     int index_q2, index_w, index_cos_theta, index_phi;
 
@@ -46,6 +46,7 @@ protected:
         // Общие ветки
         outputTree->Branch("yield", &yield, "yield/D");
         outputTree->Branch("eYield", &eYield, "eYield/D");
+        outputTree->Branch("chi2ndf", &chi2ndf, "chi2ndf/D");
         
         outputTree->Branch("width_mm", &width_mm, "width_mm/D");
         outputTree->Branch("downEdge", &downEdge, "downEdge/D");
@@ -73,15 +74,17 @@ protected:
         }
 
         width_mm = hist->GetBinWidth(1);
-        downEdge = fitter->getDownEdge(hist, i, j, k, l);
-        upEdge = fitter->getUpEdge(hist, i, j, k, l);
+        // downEdge = fitter->getDownEdge(hist, i, j, k, l);
+        // upEdge = fitter->getUpEdge(hist, i, j, k, l);
+        fitter->getBounds(hist, i, j, k, l, downEdge, upEdge);
 
-        double events = fitter->getFitRegionEvents(hist, i, j, k, l);
+        double events = fitter->getAnalyzer()->countEntries(hist, downEdge, upEdge);
         
         if (events < 0.5) {
             fillSpecificEmpty(); // Специфика
             yield = 0.0;
             eYield = 1.15 / width_mm;
+            chi2ndf = 0.0;
             neutronPosition = 0.9396;
             neutronValue = 0.0;
             neutronIntegral = 0.0;
@@ -94,13 +97,19 @@ protected:
             yield = fitter->calculateYield(fitFunc, width_mm);
             eYield = fitter->calculateYieldError(fitFunc, width_mm);
 
-            fitter->getNeutronIntegral(hist, i, j, k, l, neutronIntegral);
-            fitter->getNeutronPeak(hist, i, j, k, l, neutronPosition, neutronValue);
+            if (fitFunc->GetNDF() > 0) {
+                chi2ndf = fitFunc->GetChisquare() / fitFunc->GetNDF();
+            } else {
+                chi2ndf = 0.0; 
+            }
+
+            neutronIntegral = fitter->getAnalyzer()->getIntegral(hist, downEdge, upEdge);
+            fitter->getAnalyzer()->findPeak(hist, downEdge, upEdge, neutronPosition, neutronValue);
             
             delete fitFunc;
         }
 
-        fitter->getMaxBin(hist, maxPosition, maxValue);
+        fitter->getAnalyzer()->getGlobalMax(hist, downEdge, upEdge, maxPosition, maxValue);
         index_q2 = i; index_w = j; index_cos_theta = k; index_phi = l;
 
         outputTree->Fill();

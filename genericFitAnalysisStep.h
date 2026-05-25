@@ -1,6 +1,6 @@
 #pragma once
 
-#include "source/ManageClasses/rootTreeStep.h"
+#include "source/manageClasses/rootTreeStep.h"
 #include "utils/fitModel.h"
 
 class GenericFitAnalysisStep : public RootTreeStep {
@@ -8,7 +8,7 @@ protected:
     std::unique_ptr<FitModel> model;
     
     // Общие кинематические переменные (остаются здесь)
-    double yield, eYield, width_mm, downEdge, upEdge;
+    double yield, eYield, chi2ndf, width_mm, downEdge, upEdge;
     double neutronIntegral, neutronValue, neutronPosition, maxValue, maxPosition;
     int index_q2, index_w, index_cos_theta, index_phi;
 
@@ -27,6 +27,7 @@ public:
         // 2. Сами привязываем общие переменные
         inputTree->SetBranchAddress("yield", &yield);
         inputTree->SetBranchAddress("eYield", &eYield);
+        inputTree->SetBranchAddress("chi2ndf", &chi2ndf);
 
         inputTree->SetBranchAddress("downEdge", &downEdge);
         inputTree->SetBranchAddress("upEdge", &upEdge);

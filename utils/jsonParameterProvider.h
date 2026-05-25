@@ -1,16 +1,15 @@
 #pragma once
 
-#include <fstream>
-#include <nlohmann/json.hpp>
-#include "TH1F.h"
-#include "TF1.h"
+#include "iParameterProvider.h"
+#include "../MM_project_const.h"
 
-#include "fittingStrategy.h"
+#include <nlohmann/json.hpp>
+#include <fstream>
 
 using json = nlohmann::json;
 
-class FitterEngine : public FittingStrategy {
-protected:
+class JsonParameterProvider : public IParameterProvider {
+private:
     json config;
 
     void deepMerge(json& target, const json& source) const {
@@ -60,28 +59,6 @@ protected:
         return finalParams;
     }
 
-    // Вспомогательный метод для настройки параметров TF1
-    void configureParameter(TF1* func, int parIdx, const std::string& name, const json& pData) const {
-        if (pData.is_null()) return;
-
-        // Установка значения
-        if (pData.contains("val")) {
-            func->SetParameter(parIdx, pData["val"].get<double>());
-        }
-
-        // Установка лимитов
-        // if (pData.contains("limits")) {
-        //     double low = pData["limits"][0].is_null() ? -1e9 : pData["limits"][0].get<double>();
-        //     double high = pData["limits"][1].is_null() ? 1e9 : pData["limits"][1].get<double>();
-        //     func->SetParLimits(parIdx, low, high);
-        // }
-
-        // Фиксация
-        if (pData.value("fix", false)) {
-            func->FixParameter(parIdx, func->GetParameter(parIdx));
-        }
-    }
-
     bool isInsideBoundaries(const json& bounds, double q2, double w, double cos, double phi) const {
         auto checkSingle = [&](const json& b) {
             auto rangeMatch = [](const json& range_list, double val) {
@@ -105,34 +82,60 @@ protected:
     }
 
 public:
-    FitterEngine(const std::string& configPath) {
-        std::ifstream f(configPath);
+    JsonParameterProvider(const std::string& path)
+        : IParameterProvider() {
+        std::ifstream f(path);
         f >> config;
     }
 
-    // Эти методы общие для всех — границы бина зависят от кинематики, а не от функции
-    double getDownEdge(TH1F* hist, int i, int j, int k, int l) const override {
-        double downEdge =  getEffectiveParams(i, j, k, l).value("downEdge", 0.8);
-        double x_min = hist->GetXaxis()->GetXmin();
-
-        if (downEdge < x_min) downEdge = x_min;
-        return downEdge;
-    }
-
-    double getUpEdge(TH1F* hist, int i, int j, int k, int l) const override {
-        double upEdge = getEffectiveParams(i, j, k, l).value("upEdge", 1.1);
-        double x_max = hist->GetXaxis()->GetXmax();
-
-        if (upEdge > x_max) upEdge = x_max;
-        return upEdge;
-    }
-
-    double getDeltaPeak(TH1F* hist, int i, int j, int k, int l) const override {
+    FitParameter getParameter(const std::string& name, int i, int j, int k, int l, TH1F* hist = nullptr) const override {
+        // Получаем объединенный JSON объект для данных индексов (Q2, W, etc.)
+        // Эта логика у тебя уже реализована в FitterEngine
         json p = getEffectiveParams(i, j, k, l);
-        if (p.contains("meanGaussDelta")) return p["meanGaussDelta"].value("val", 0.0);
-        return 1.232;
+
+        if (p.contains(name)) {
+            auto& item = p[name];
+
+            // Случай 1: В JSON просто число (например, "sigma": 0.05)
+            if (item.is_number()) {
+                return FitParameter(name, item.get<double>());
+            }
+
+            // Случай 2: В JSON объект (например, "sigma": {"val": 0.05, "fix": true, "limits": [0.01, 0.1]})
+            if (item.is_object()) {
+                double val = item.value("val", 0.0);
+                bool fix  = item.value("fix", false);
+                double low = -FitParameter::NO_LIMIT;
+                double high = FitParameter::NO_LIMIT;
+
+                if (item.contains("limits") && item["limits"].is_array() && item["limits"].size() == 2) {
+                    auto& l_json = item["limits"];
+                    
+                    low  = l_json[0].is_null() ? -FitParameter::NO_LIMIT : l_json[0].get<double>();
+                    high = l_json[1].is_null() ?  FitParameter::NO_LIMIT : l_json[1].get<double>();
+                }
+
+                return FitParameter(name, val, fix, low, high);
+            }
+        }
+
+        // Если параметра нет, возвращаем дефолтный (val=0, fix=false, no limits)
+        return FitParameter(name); 
     }
-    
-    // Чисто виртуальный метод — конкретика будет в наследниках
-    virtual TF1* fit(TH1F* hist, int i, int j, int k, int l) const override = 0;
+
+    bool hasParameter(const std::string& name, int i, int j, int k, int l) const override {
+        return getEffectiveParams(i, j, k, l).contains(name);
+    }
+
+    void getBounds(int i, int j, int k, int l, double& low, double& high) const override {
+        double defLow = 0.8, defHigh = 1.1;
+        
+        low = hasParameter("downEdge", i, j, k, l) 
+            ? getParameter("downEdge", i, j, k, l).val 
+            : defLow;
+            
+        high = hasParameter("upEdge", i, j, k, l) 
+            ? getParameter("upEdge", i, j, k, l).val 
+            : defHigh;
+    }
 };

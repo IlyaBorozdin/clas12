@@ -1,20 +1,24 @@
 #pragma once
 
-#include "fitterEngine.h"
+// #include "fitterEngine.h"
+#include "fitterStrategy.h"
 #include "TMath.h"
 
-class LegacyNeutronFitter : public FitterEngine {
+class LegacyNeutronFitter : public FitterStrategy {
 public:
-    using FitterEngine::FitterEngine;
+    using FitterStrategy::FitterStrategy;
 
         TF1* fit(TH1F* hist, int i, int j, int k, int l) const override {
-            json p = getEffectiveParams(i, j, k, l);
+            // json p = getEffectiveParams(i, j, k, l);
             
-            double xMin = getDownEdge(hist, i, j, k, l);
-            double xMax = getUpEdge(hist, i, j, k, l);
+            // double xMin = getDownEdge(hist, i, j, k, l);
+            // double xMax = getUpEdge(hist, i, j, k, l);
+            double xMin, xMax;
+            getBounds(hist, i, j, k, l, xMin,xMax);
 
             double maxPosition, maxValue;
-            getNeutronPeak(hist, i, j, k, l, maxPosition, maxValue);
+            // getNeutronPeak(hist, i, j, k, l, maxPosition, maxValue);
+            m_analyzer->findPeak(hist, xMin, xMax, maxPosition, maxValue);
 
             // Создаем универсальную функцию (например, Gauss + Gauss + Parabolic Pol2)
             // Название и формула зависят от вашей модели
@@ -24,22 +28,31 @@ public:
             f->SetParameter(0, maxValue);
             f->SetParameter(1, maxPosition);
 
-            configureParameter(f, 2, "stdDevGauss", p["stdDevGauss"]);
-            configureParameter(f, 3, "asymGauss", p["asymGauss"]);
+            // configureParameter(f, 2, "stdDevGauss", p["stdDevGauss"]);
+            // configureParameter(f, 3, "asymGauss", p["asymGauss"]);
+            m_provider->getParameter("stdDevGauss", i, j, k, l).apply(f, 2);
+            m_provider->getParameter("asymGauss", i, j, k, l).apply(f, 3);
 
-            configureParameter(f, 4, "ampBack", p["ampBack"]);
-            configureParameter(f, 5, "x1", p["x1"]);
-            configureParameter(f, 6, "x2", p["x2"]);
+            // configureParameter(f, 4, "ampBack", p["ampBack"]);
+            // configureParameter(f, 5, "x1", p["x1"]);
+            // configureParameter(f, 6, "x2", p["x2"]);
+            m_provider->getParameter("ampBack", i, j, k, l).apply(f, 4);
+            m_provider->getParameter("x1", i, j, k, l).apply(f, 5);
+            m_provider->getParameter("x2", i, j, k, l).apply(f, 6);
 
-            configureParameter(f, 7, "ampGaussDelta", p["ampGaussDelta"]);
-            configureParameter(f, 8, "meanGaussDelta", p["meanGaussDelta"]);
-            configureParameter(f, 9, "stdDevGaussDelta", p["stdDevGaussDelta"]);
+            // configureParameter(f, 7, "ampGaussDelta", p["ampGaussDelta"]);
+            // configureParameter(f, 8, "meanGaussDelta", p["meanGaussDelta"]);
+            // configureParameter(f, 9, "stdDevGaussDelta", p["stdDevGaussDelta"]);
+            m_provider->getParameter("ampGaussDelta", i, j, k, l).apply(f, 7);
+            m_provider->getParameter("meanGaussDelta", i, j, k, l).apply(f, 8);
+            m_provider->getParameter("stdDevGaussDelta", i, j, k, l).apply(f, 9);
 
             f->SetParLimits(0, 0.05 * maxValue, 1.1 * maxValue);
             f->SetParLimits(1, xMin, 1.05);
             f->SetParLimits(2, 0.0085, 0.085);
             f->SetParLimits(3, 0.33, 3.00);
-            f->SetParLimits(7, 0.00, hist->GetBinContent(hist->FindBin(getDeltaPeak(hist, i, j, k, l))));
+            // f->SetParLimits(7, 0.00, hist->GetBinContent(hist->FindBin(getDeltaPeak(hist, i, j, k, l))));
+            // f->SetParLimits(7, 0.00, hist->GetBinContent(hist->FindBin(m_provider->getParameter("stdDevGaussDelta", i, j, k, l).val)));
             f->SetParLimits(9, 0.01, 0.1);
 
             hist->Fit(f, "RQ");
@@ -81,9 +94,9 @@ public:
     }
 };
 
-class EMGNeutronFitter : public FitterEngine {
+class EMGNeutronFitter : public FitterStrategy {
 public:
-    using FitterEngine::FitterEngine;
+    using FitterStrategy::FitterStrategy;
 
     static double evaluateFullModel(double* x, double* p) {
         double val = x[0];
@@ -124,14 +137,18 @@ public:
     }
 
     TF1* fit(TH1F* hist, int i, int j, int k, int l) const override {
-        json p = getEffectiveParams(i, j, k, l);
+        // json p = getEffectiveParams(i, j, k, l);
         
-        double xMin = getDownEdge(hist, i, j, k, l);
-        double xMax = getUpEdge(hist, i, j, k, l);
+        // double xMin = getDownEdge(hist, i, j, k, l);
+        // double xMax = getUpEdge(hist, i, j, k, l);
+        double xMin, xMax;
+        getBounds(hist, i, j, k, l, xMin,xMax);
 
         double maxPosition, maxValue, integral;
-        getNeutronPeak(hist, i, j, k, l, maxPosition, maxValue);
-        getNeutronIntegral(hist, i, j, k, l, integral);
+        // getNeutronPeak(hist, i, j, k, l, maxPosition, maxValue);
+        // getNeutronIntegral(hist, i, j, k, l, integral);
+        m_analyzer->findPeak(hist, xMin, xMax, maxPosition, maxValue);
+        integral = m_analyzer->getIntegral(hist, xMin, xMax);
 
         // Создаем TF1, передавая указатель на метод текущего класса
         // 10 - количество параметров
@@ -144,16 +161,23 @@ public:
         f->SetParameter(0, 0.8 * integral * hist->GetXaxis()->GetBinWidth(1));      // h_EMG
         f->SetParameter(1, maxPosition);   // mu_EMG
         
-        configureParameter(f, 2, "stdDevGauss", p["stdDevGauss"]);
+        // configureParameter(f, 2, "stdDevGauss", p["stdDevGauss"]);
+        m_provider->getParameter("stdDevGauss", i, j, k, l).apply(f, 2);
         f->SetParameter(3, 0.01);
         
-        configureParameter(f, 4, "ampBack", p["ampBack"]);
-        configureParameter(f, 5, "x1", p["x1"]);
-        configureParameter(f, 6, "x2", p["x2"]);
+        // configureParameter(f, 4, "ampBack", p["ampBack"]);
+        // configureParameter(f, 5, "x1", p["x1"]);
+        // configureParameter(f, 6, "x2", p["x2"]);
+        m_provider->getParameter("ampBack", i, j, k, l).apply(f, 4);
+        m_provider->getParameter("x1", i, j, k, l).apply(f, 5);
+        m_provider->getParameter("x2", i, j, k, l).apply(f, 6);
 
-        configureParameter(f, 7, "ampGaussDelta", p["ampGaussDelta"]);
-        configureParameter(f, 8, "meanGaussDelta", p["meanGaussDelta"]);
-        configureParameter(f, 9, "stdDevGaussDelta", p["stdDevGaussDelta"]);
+        // configureParameter(f, 7, "ampGaussDelta", p["ampGaussDelta"]);
+        // configureParameter(f, 8, "meanGaussDelta", p["meanGaussDelta"]);
+        // configureParameter(f, 9, "stdDevGaussDelta", p["stdDevGaussDelta"]);
+        m_provider->getParameter("ampGaussDelta", i, j, k, l).apply(f, 7);
+        m_provider->getParameter("meanGaussDelta", i, j, k, l).apply(f, 8);
+        m_provider->getParameter("stdDevGaussDelta", i, j, k, l).apply(f, 9);
 
         // --- Установка лимитов (аналогично Legacy) ---
         f->SetParLimits(0, 0.0, 1.8 * integral * hist->GetXaxis()->GetBinWidth(1));
@@ -162,8 +186,10 @@ public:
         f->SetParLimits(3, -0.5, 0.5); // Лимит на тау (хвост)
 
         // Для дельты используем твой метод getDeltaPeak
-        double deltaPos = getDeltaPeak(hist, i, j, k, l);
-        f->SetParLimits(7, 0.00, hist->GetBinContent(hist->FindBin(getDeltaPeak(hist, i, j, k, l))));
+        // double deltaPos = getDeltaPeak(hist, i, j, k, l);
+        // f->SetParLimits(7, 0.00, hist->GetBinContent(hist->FindBin(getDeltaPeak(hist, i, j, k, l))));
+        // f->SetParLimits(7, 0.00, hist->GetBinContent(hist->FindBin(m_provider->getParameter("stdDevGaussDelta", i, j, k, l).val)));
+
         f->SetParLimits(9, 0.01, 0.1);
 
         hist->Fit(f, "RQ");
