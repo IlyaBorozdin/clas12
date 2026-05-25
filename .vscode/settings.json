@@ -1,7 +1,11 @@
 {
     "files.associations": {
         "iostream": "cpp",
+<<<<<<< HEAD
         "ifstream": "cpp",
+=======
+        "ifsteam": "cpp",
+>>>>>>> 8fdd93c63d8a6e826fcd1daff32bb6378b3466be
         "vector": "cpp",
         "ostream": "cpp",
         "iosfwd": "cpp",

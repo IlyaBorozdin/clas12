@@ -2,6 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
+<<<<<<< HEAD
             "name": "ROOT Launch (Macro)",
             "type": "cppdbg",
             "request": "launch",
@@ -11,10 +12,18 @@
                 "-q",
                 "${file}"
             ],
+=======
+            "name": "C++ Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "args": [],
+>>>>>>> 8fdd93c63d8a6e826fcd1daff32bb6378b3466be
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
+<<<<<<< HEAD
             "MIMode": "lldb"
         },
         {
@@ -26,27 +35,125 @@
                 "-l",
                 "-q",
                 "${file}"
+=======
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "text": "set print pretty on",
+                    "ignoreFailures": true
+                },
+                {
+                    "text": "set print elements 100",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build",
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "C++ Launch No Build",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${fileDirname}/${fileBasenameNoExtension}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "text": "set print pretty on",
+                    "ignoreFailures": true
+                },
+                {
+                    "text": "set print elements 100",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "ROOT Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/home/ilya/Документы/root-6.28.06/build/bin/root",
+            "args": [
+                "-l",
+                "-q",
+                "${relativeFile}"
+>>>>>>> 8fdd93c63d8a6e826fcd1daff32bb6378b3466be
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
+<<<<<<< HEAD
             "MIMode": "lldb"
+=======
+            "MIMode": "gdb",
+            "setupCommands": [],
+            "miDebuggerPath": "/usr/bin/gdb"
+        },
+        {
+            "name": "CLAS12ROOT Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/home/ilya/Документы/clas12root/bin/clas12root",
+            "args": [
+                "-l",
+                "-q",
+                "${relativeFile}"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [],
+            "miDebuggerPath": "/usr/bin/gdb"
+>>>>>>> 8fdd93c63d8a6e826fcd1daff32bb6378b3466be
         },
         {
             "name": "CLAS12ROOT Launch No Exit",
             "type": "cppdbg",
             "request": "launch",
+<<<<<<< HEAD
             "program": "/Users/boroz/clas12root/bin/clas12root",
             "args": [
                 "-l",
                 "${file}"
+=======
+            "program": "/home/ilya/Документы/clas12root/bin/clas12root",
+            "args": [
+                "-l",
+                "${relativeFile}"
+>>>>>>> 8fdd93c63d8a6e826fcd1daff32bb6378b3466be
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
+<<<<<<< HEAD
             "MIMode": "lldb"
         }
     ]
 }
+=======
+            "MIMode": "gdb",
+            "setupCommands": [],
+            "miDebuggerPath": "/usr/bin/gdb"
+        }
+    ]
+}
+>>>>>>> 8fdd93c63d8a6e826fcd1daff32bb6378b3466be

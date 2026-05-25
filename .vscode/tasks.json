@@ -2,6 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
+<<<<<<< HEAD
             "label": "Compile ROOT macros (Fast Check)",
             "type": "shell",
             "command": "/opt/homebrew/bin/root",
@@ -11,12 +12,19 @@
                 "-q",
                 "${file}"
             ],
+=======
+            "label": "build",
+            "type": "shell",
+            "command": "g++",
+            "args": ["-g", "${file}", "-o", "${fileDirname}/${fileBasenameNoExtension}"],
+>>>>>>> 8fdd93c63d8a6e826fcd1daff32bb6378b3466be
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
             "presentation": {
                 "reveal": "always",
+<<<<<<< HEAD
                 "panel": "dedicated"
             }
         },
@@ -41,3 +49,25 @@
         }
     ]
 }
+=======
+                "panel": "new"
+            }
+        },
+        {
+            "label": "compile ROOT macros",
+            "type": "shell",
+            "command": "/home/ilya/Документы/root-6.28.06/build/bin/root",
+            "args": [
+                "-b",
+                "-q",
+                "-l",
+                "${relativeFile}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
+>>>>>>> 8fdd93c63d8a6e826fcd1daff32bb6378b3466be
